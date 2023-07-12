@@ -1,0 +1,25 @@
+# jemdoc: menu{MENU}{research.html}, addcss{css/jacob.css}{css/nolines.css}{css/exp.css}, showsource
+= Research
+
+{{<img src="img/dblp.png" alt="dblp" style="width:16px; height:16px; margin:0 0 -5px 
+0">}} [https://dblp.org/pid/276/2654.html dblp], {{<img src="img/google-scholar.png" alt="google scholar" style="width:16px; height:16px; margin:0 0 -5px 0">}} [https://scholar.google.fr/citations?user=bYcMc9YAAAAJ&hl=fr google scholar], {{<img src="img/github.png" alt="github" style="width:16px; height:16px; margin:0 0 -5px 0">}} [https://github.com/kevinzagalo github].
+
+
+== Publications
+
+- Kevin Zagalo, Yasmina Abdeddaïm, Avner Bar-Hen, Liliana Cucu-Grosjean. Response Time Stochastic Analysis for Fixed-Priority Stable Real-Time Systems. IEEE Transactions on Computers, Institute
+of Electrical and Electronics Engineers, 2023, pp.1-12.  [https://ieeexplore.ieee.org/document/9907791 10.1109/TC.2022.3211421],  [https://hal.archives-ouvertes.fr/hal-03797980 hal-03797980].
+- Kevin Zagalo, Olena Verbytska, Liliana Cucu-Grosjean and Avner Bar-Hen. Response Times Parametric Estimation of Real-Time Systems. Preprint, [https://arxiv.org/abs/2211.01720 arXiv:2211.01720], [https://hal.archives-ouvertes.fr/hal-03839408 hal-03839408].
+- M. W. El Khazen, K. Zagalo, H. Clarke, M. Mezouak, Y. Abdeddaïm, A. Bar-Hen, S. Ben Amor, R. Bennour, A. Gogonel, K. Kougblenou, Y. Sorel, L. Cucu-Grosjean, "Work in Progress: KDBench - towards open source benchmarks for measurement-based multicore WCET estimators," 2022 IEEE 28th Real-Time and Embedded Technology and Applications Symposium (RTAS), 2022, pp. 309-312, doi: [https://ieeexplore.ieee.org/document/9804670 10.1109/RTAS54340.2022.00035].
+- Kevin Zagalo, Liliana Cucu-Grosjean, Avner Bar-Hen. Identification of execution modes for real-time
+systems using cluster analysis. 25th IEEE International Conference on Emerging Technologies and
+Factory Automation, ETFA, Sep 2020, Vienne, Austria.  [https://ieeexplore.ieee.org/document/9211983 10.1109/ETFA46521.2020.9211983],  [https://hal.inria.fr/hal-02938202v1 hal-02938202]
+
+== Software
+
+I mainly implement things in Python.
+
+- An adapted version of [https://maximecheramy.github.io/simso/ SimSo] for probabilistic execution times, implemented with Marc-Antoine Auvray ([https://github.com/kevinzagalo/simso link]) 
+- A Python library for the reparameterized inverse Gaussian distribution, implemented with Olena Verbytska ([https://github.com/kevinzagalo/rInverseGaussian link])
+- A Python library for hypoexponential distributions ([https://github.com/kevinzagalo/hypoexponential link])
+

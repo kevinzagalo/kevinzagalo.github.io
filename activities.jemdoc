@@ -1,0 +1,25 @@
+# jemdoc: menu{MENU}{activities.html}, addcss{css/jacob.css}{css/nolines.css}{css/exp.css}, showsource
+= Activities
+
+
+== Teaching
+
+-  Machine learning, [https://www.esiee.fr ESIEE], Gustave Eiffel University, Fall 2020.
+-  Machine learning, [https://www.esiee.fr ESIEE], Gustave Eiffel University, Fall 2021.
+-  Probabilities, [https://www.esiee.fr ESIEE], Gustave Eiffel University, Spring 2021.
+
+== Students
+
+- Marc-Antoine Auvray (apprentice), *Autopilot execution time prediction from sensors data*, 2022.
+- Olena Verbytska, (intern), *Parametric estimation of response time distributions of periodic real-time systems*, Spring 2022.
+- Margarita Tomina, (intern), *Multivariate inverse Gaussian applied to response time analysis of real-time systems*, Spring 2022.
+
+
+== Committees
+
+- Web chair of [https://rtns2022.inria.fr RTNS 2022].
+- Workshop Committee member of [https://rtns2021.univ-nantes.fr/jrwrtc/ JRWRTC 2022].
+- Local organization of [http://2022.rtss.org/ RTSS 2022].
+- Workshop Committee member of [https://rtns2021.univ-nantes.fr/jrwrtc/ JRWRTC 2021].
+- Local organization of [https://rtns2020.inria.fr/ RTNS 2020].
+
