@@ -23,7 +23,7 @@ Factory Automation, ETFA, Sep 2020, Vienne, Austria.  [https://ieeexplore.ieee.o
 
 I mainly implement things in Python.
 
-- An adapted version of [https://maximecheramy.github.io/simso/ SimSo] for probabilistic execution times, implemented with Marc-Antoine Auvray ([https://github.com/kevinzagalo/simso link]) 
-- A Python library for the reparameterized inverse Gaussian distribution, implemented with Olena Verbytska ([https://github.com/kevinzagalo/rInverseGaussian link])
-- A Python library for hypoexponential distributions ([https://github.com/kevinzagalo/hypoexponential link])
+- An adapted version of [https://maximecheramy.github.io/simso/ SimSo] for probabilistic execution times, implemented with Marc-Antoine Auvray [https://github.com/kevinzagalo/simso {{<img src="img/link.png" alt="github" style="width:14px; height:14px; margin:0 0 -3px 0">}}]
+- A Python library for the reparameterized inverse Gaussian distribution, implemented with Olena Verbytska [https://github.com/kevinzagalo/rInverseGaussian  {{<img src="img/link.png" alt="github" style="width:14px; height:14px; margin:0 0 -3px 0">}}]
+- A Python library for hypoexponential distributions [https://github.com/kevinzagalo/hypoexponential  {{<img src="img/link.png" alt="github" style="width:14px; height:14px; margin:0 0 -3px 0">}}]
 

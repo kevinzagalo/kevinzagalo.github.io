@@ -1,0 +1,28 @@
+# jemdoc: menu{MENU}{index.html}, addcss{css/exp.css}{css/jacob.css}
+= Kevin Zagalo
+
+~~~
+{Kevin Zagalo}{img_left}{img/profile.jpeg}{}
+Postdoctoral researcher in the [https://team.inria.fr/maracas/ Maracas] team of Inria Lyon. I work in collaboration with [http://perso.citi.insa-lyon.fr/jmgorce/ Jean-Marie Gorce] and [https://www.di.ens.fr/baccelli/ François Baccelli]. My research is partially founded by the european project ERC NEMO and the french national PEPR Future Networks.
+
+=== Research interests
+- Real-time scheduling
+- Wireless networks
+
+
+{{<img src="img/orcid.png" alt="dblp" style="width:16px; height:16px; margin:0 0 -5px 
+0">}} [https://orcid.org/0000-0001-7768-8841 orcid], {{<img src="img/dblp.png" alt="dblp" style="width:16px; height:16px; margin:0 0 -5px 
+0">}} [https://dblp.org/pid/276/2654.html dblp], {{<img src="img/google-scholar.png" alt="google scholar" style="width:16px; height:16px; margin:0 0 -5px 0">}} [https://scholar.google.fr/citations?user=bYcMc9YAAAAJ&hl=fr google scholar], {{<img src="img/github.png" alt="github" style="width:16px; height:16px; margin:0 0 -5px 0">}} [https://github.com/kevinzagalo github]
+~~~
+
+== Contact
+
+{{<img src="img/logo-citi.png" style="height:45px;" alt="citi">}}\n
+6 Avenue des Arts\n
+Villeurbanne 69100\n
+France\n
+
+{{<p style="font-family:'Courier New'"><img src="img/mail_icon.png" style="height:18px; margin:0 0 -5px 0" alt="mail">    kevin (dot) zagalo (at) inria (dot) fr</p>}}
+
+{{<img src="img/logo-lyon1.png" style="height:50px;" alt="ucbl"><img src="img/logo-insa.png" style="height:50px;" alt="insa"><img src="img/logo-inria.png" style="height:50px;" alt="inria">}}
+

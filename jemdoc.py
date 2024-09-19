@@ -266,7 +266,7 @@ def standardconf():
   Page generated |, by <a href="https://github.com/mengzili/jemdoc-python3">jemdoc</a>.
 
   [sourcelink]
-  (<a href="|">source</a>)
+  (<a href="|" target="_blank">source</a>)
 
   """
   b = ''
@@ -645,7 +645,7 @@ def replacelinks(b):
       # remove any mailto before labelling.
       linkname = re.sub('^mailto:', '', link)
 
-    b = b[:m.start()] + r'<a href=\"%s\">%s<\/a>' % (link, linkname) + b[m.end():]
+    b = b[:m.start()] + r'<a href=\"%s\" target="_blank">%s<\/a>' % (link, linkname) + b[m.end():]
 
     m = r.search(b, m.start())
 
