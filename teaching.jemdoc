@@ -1,0 +1,25 @@
+# jemdoc: menu{MENU}{teaching.html}, addcss{css/jacob.css}{css/nolines.css}{css/exp.css}
+= Teaching
+
+== Currently:
+	- Radio access networks, INSA Lyon, Spring 2026.
+	- Digital communications, INSA Lyon, Spring 2026.
+
+=== Past lectures:
+	- Advanced digital communications, INSA Lyon, Fall 2025.
+	- Network performance evaluation, INSA Lyon, Fall 2025.
+	- Introduction to probabilities, INSA Lyon, Fall 2025.
+	- Radio Access Network (tutorials), INSA Lyon, Spring 2025.
+	- Digital communications, INSA Lyon, Spring 2025.
+	- Hertzian and optical propagation, INSA Lyon, Fall 2024.
+	- Probabilities, INSA Lyon, Fall 2024.
+	- Machine learning, ESIEE, Université Gustave Eiffel, Fall 2021.
+	- Probabilities, ESIEE, Université Gustave Eiffel, Spring 2021.
+	- Machine learning, ESIEE, Université Gustave Eiffel, Fall 2020.
+
+== Student interns
+
+- Johan Bartosik, *GNN for Joint User Detection and Channel Estimation*, 2025.
+- Marc-Antoine Auvray, *Autopilot execution time prediction from sensors data*, 2022.
+- Olena Verbytska, *Parametric estimation of response time distributions of periodic real-time systems*, Spring 2022.
+- Margarita Tomina, *Multivariate inverse Gaussian applied to response time analysis of real-time systems*, Spring 2022.
