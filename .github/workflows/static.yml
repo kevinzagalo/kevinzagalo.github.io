@@ -1,0 +1,21 @@
+image: python:3.9
+
+pages:
+  stage: deploy
+  script:
+    # 1. Create the staging folder
+    - mkdir public
+    
+    # 2. Run jemdoc
+    - python3 jemdoc.py -o public/ *.jemdoc
+    
+    # 3. Copy folders (using cp -r for recursive copy)
+    - cp -r css public/
+    - cp -r docs public/
+    - cp -r img public/
+    
+  artifacts:
+    paths:
+      - public
+  only:
+    - main
