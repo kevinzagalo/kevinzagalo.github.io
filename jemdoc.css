@@ -177,7 +177,7 @@ body {
 
 p {
     margin-top: 0.0em;
-    margin-bottom: 1.8em; /* INCREASED: Adds breathing room after text paragraphs */
+    margin-bottom: 2.5em; /* INCREASED: Adds breathing room after text paragraphs */
     padding: 0;
     line-height: 1.3;
 }
