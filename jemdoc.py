@@ -261,7 +261,7 @@ def standardconf():
   </div>
   
   [lastupdated]
-  Page generated |, by <a href="https://github.com/mengzili/jemdoc-python3">jemdoc</a>.
+  Page generated |, by a slightly modified version of <a href="https://github.com/mengzili/jemdoc-python3">jemdoc</a>.
 
   [sourcelink]
   (<a href="|" target="_blank">source</a>)

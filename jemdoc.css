@@ -141,11 +141,13 @@ div#subtitle {
     width: 160px;       /* Compact narrow width */
     height: 100vh;      /* Full viewport height */
     box-sizing: border-box;
-    padding: 25px 15px; /* Clean, condensed padding padding */
+    /* Reduced right padding from 15px to 6px to push text closer to the line */
+    padding: 25px 6px 25px 15px; 
     overflow-y: auto;   /* Permits menu scrolling if items expand */
     background-color: #ffffff; 
-    border-right: 1px solid #c0c0c0; /* Sidebar divider */
+    border-right: 1px solid #c0c0c0; /* Sidebar divider line */
     line-height: 1.7em;
+    text-align: right;  /* Keeps text aligned right toward the line */
     
     /* Flexbox layout to cleanly anchor the top link down */
     display: flex;
@@ -154,8 +156,9 @@ div#subtitle {
 
 /* Offsets the main reading pane to prevent sidebar overlap */
 #layout-content {
-    margin-left: 190px; /* Accounts for 160px menu + a clean 30px whitespace gap */
-    width: calc(100% - 190px);
+    /* Reduced from 190px to 175px (places text exactly 15px past the line) */
+    margin-left: 175px; 
+    width: calc(100% - 175px);
     box-sizing: border-box;
     padding: 25px;
     text-align: left;
@@ -205,7 +208,7 @@ div.menu-item {
     font-weight: bold;
     color: #305080;
     display: inline-block;
-    font-size: 0.9em;   /* Scaled down slightly to look proportional */
+    font-size: 0.9em;   
     border-bottom: none;
 }
 
