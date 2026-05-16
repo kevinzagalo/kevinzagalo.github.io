@@ -1382,8 +1382,15 @@ def procfile(f):
       (s, c) = nl(f, True)
       # trim trailing \n.
       s = s[:-1]
-      hb(f.outf, '<h%d>|</h%d>\n' % (c, c), br(s, f))
-
+      
+      # Generate a clean anchor ID from the heading text 
+      # (e.g., "Publications & Patents" becomes "publications-patents")
+      anchor_id = s.lower().strip()
+      anchor_id = re.sub(r'[^a-z0-9\s-]', '', anchor_id)
+      anchor_id = re.sub(r'\s+', '-', anchor_id)
+      
+      # Insert the ID into the heading tag
+      hb(f.outf, '<h%d id="%s">|</h%d>\n' % (c, anchor_id, c), br(s, f))
     # look for comments.
     elif p == '#':
       l = nl(f)
