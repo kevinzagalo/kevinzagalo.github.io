@@ -142,7 +142,7 @@ div#subtitle {
     height: 100vh;      /* Full viewport height */
     box-sizing: border-box;
     /* Reduced right padding from 15px to 6px to push text closer to the line */
-    padding: 25px 6px 25px 15px; 
+    padding: 20px 10px 25px 15px; 
     overflow-y: auto;   /* Permits menu scrolling if items expand */
     background-color: #ffffff; 
     border-right: 1px solid #c0c0c0; /* Sidebar divider line */
