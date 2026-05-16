@@ -138,7 +138,7 @@ div#subtitle {
     position: fixed;
     top: 0;
     left: 0;
-    width: 120px;       /* Compact narrow width */
+    width: 130px;       /* Compact narrow width */
     height: 100vh;      /* Full viewport height */
     box-sizing: border-box;
     /* Reduced right padding from 15px to 6px to push text closer to the line */
@@ -157,7 +157,7 @@ div#subtitle {
 /* Offsets the main reading pane to prevent sidebar overlap */
 #layout-content {
     /* Reduced from 190px to 175px (places text exactly 15px past the line) */
-    margin-left: 175px; 
+    margin-left: 150px; 
     width: calc(100% - 175px);
     box-sizing: border-box;
     padding: 25px;
