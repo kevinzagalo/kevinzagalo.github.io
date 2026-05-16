@@ -189,13 +189,12 @@ def standardconf():
   } catch(err) {}</script>
   
   [menustart]
-  <table summary="Table for page layout." id="tlayout">
-  <tr valign="top">
-  <td id="layout-menu">
+  <div id="tlayout">
+  <div id="layout-menu">
   
   [menuend]
-  </td>
-  <td id="layout-content">
+  </div>
+  <div id="layout-content">
   
   [menucategory]
   <div class="menu-category">|</div>
@@ -216,9 +215,8 @@ def standardconf():
   <div id="layout-content">
   
   [menulastbit]
-  </td>
-  </tr>
-  </table>
+  </div>
+  </div>
   
   [nomenulastbit]
   </div>
@@ -1378,18 +1376,17 @@ def procfile(f):
       colonlist(f)
 
     # look for titles.
+       # look for titles.
     elif p == '=':
       (s, c) = nl(f, True)
       # trim trailing \n.
       s = s[:-1]
       
-      # Generate a clean anchor ID from the heading text 
-      # (e.g., "Publications & Patents" becomes "publications-patents")
+      # Generate a clean anchor ID from heading text
       anchor_id = s.lower().strip()
       anchor_id = re.sub(r'[^a-z0-9\s-]', '', anchor_id)
       anchor_id = re.sub(r'\s+', '-', anchor_id)
       
-      # Insert the ID into the heading tag
       hb(f.outf, '<h%d id="%s">|</h%d>\n' % (c, anchor_id, c), br(s, f))
     # look for comments.
     elif p == '#':
@@ -1509,7 +1506,7 @@ def procfile(f):
   else:
     out(f.outf, f.conf['nomenulastbit'])
 
-  # Auto-inject the Back-to-Top arrow
+  # Automatically inject the Back-to-Top arrow
   out(f.outf, '<a href="#" id="back-to-top" title="Go to top">&uarr;</a>\n')
 
   out(f.outf, f.conf['bodyend'])
