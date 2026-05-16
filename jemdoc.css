@@ -138,7 +138,7 @@ div#subtitle {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100px;       /* Compact narrow width */
+    width: 120px;       /* Compact narrow width */
     height: 100vh;      /* Full viewport height */
     box-sizing: border-box;
     /* Reduced right padding from 15px to 6px to push text closer to the line */
