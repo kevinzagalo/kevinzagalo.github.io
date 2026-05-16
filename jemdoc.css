@@ -1,30 +1,34 @@
 /* ==========================================================================
    Master Jemdoc Stylesheet
-   (Merged: default, jacob.css, nolines.css, and exp.css)
+   (Merged & Cleaned: default, jacob.css, nolines.css, exp.css, & Modern Sticky Layout)
    ========================================================================== */
+
+html {
+    scroll-behavior: smooth;
+}
 
 /* --- Core Page Layout & Typography --- */
 body {
     background: white;
     font: 80% Verdana, sans-serif; /* Preferred font stack from exp.css */
-    line-height: 1.3;               /* Tight interline space from jacob.css & default */
+    line-height: 1.3;               /* Tight interline space from jacob.css */
     padding-bottom: 8px;
     margin: 0;
 }
 
 p {
     margin-top: 0.0em;
-    margin-bottom: 1.2em; /* Kept spacing preference from exp.css */
+    margin-bottom: 1.2em; /* Spacing preference from exp.css */
     padding: 0;
     line-height: 1.3;
 }
 
 b, strong {
-    font-weight: normal; /* Override to regular weight per your custom files */
+    font-weight: normal; 
 }
 
 strong {
-    font-weight: bold;   /* Preserved default explicit bolding tag */
+    font-weight: bold;   
 }
 
 p b {
@@ -72,7 +76,7 @@ h1, h2, h3 {
     padding-bottom: 0.2em;
     line-height: 1.0;
     padding-top: 0.5em;
-    border: none;   /* Removed heading borders as per nolines/exp preferences */
+    border-bottom: 1px solid #c0c0c0; /* Kept clean line demarcation */
 }
 
 h1 { font-size: 150%; }
@@ -85,29 +89,6 @@ h4, h5, h6 {
 
 h2 + h3 {
     padding-top: 0.2em;
-}
-
-/* --- Layout Structure & Contexts --- */
-table#tlayout {
-    border: none;
-    border-collapse: separate;
-    background: white;
-}
-
-#layout-content {
-    padding-top: 1.3em;
-    padding-left: 30px;
-    padding-right: 30px;
-    border: none;
-    background: white;
-    text-align: left;
-    vertical-align: top;
-}
-
-#layout-content h1:first-child, 
-#layout-content h2:first-child, 
-#layout-content h3:first-child {
-    margin-top: -0.7em;
 }
 
 #fwtitle {
@@ -142,27 +123,52 @@ div#subtitle {
     padding-bottom: 0.1em;
 }
 
-/* --- Navigation Menu --- */
-#layout-menu {
-    border: none;
-    border-right: 1px solid #c0c0c0; /* Right border separation rule from nolines.css */
-    padding: 10px 20px 10px 20px;
-    background: white;
-    line-height: 1.7em;
-    text-align: right;
-    padding-top: 0.5em;
-    width: auto;
-    white-space: nowrap;
-    vertical-align: top;
+/* ==========================================================================
+   Modern Fixed Layout Container Syntax (No-Table Flex Layout)
+   ========================================================================== */
+
+/* Overrides structural table behavior to map onto modern flow divs */
+#tlayout {
+    display: block;
+    width: 100%;
 }
 
-#layout-menu td {
-    background: #f4f4f4;
-    vertical-align: top;
+/* Fixes and narrows the left column sidebar */
+#layout-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 160px;       /* Compact narrow width */
+    height: 100vh;      /* Full viewport height */
+    box-sizing: border-box;
+    padding: 25px 15px; /* Clean, condensed padding padding */
+    overflow-y: auto;   /* Permits menu scrolling if items expand */
+    background-color: #ffffff; 
+    border-right: 1px solid #c0c0c0; /* Sidebar divider */
+    line-height: 1.7em;
+    
+    /* Flexbox layout to cleanly anchor the top link down */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Offsets the main reading pane to prevent sidebar overlap */
+#layout-content {
+    margin-left: 190px; /* Accounts for 160px menu + a clean 30px whitespace gap */
+    width: calc(100% - 190px);
+    box-sizing: border-box;
+    padding: 25px;
+    text-align: left;
+}
+
+#layout-content h1:first-child, 
+#layout-content h2:first-child, 
+#layout-content h3:first-child {
+    margin-top: -0.7em;
 }
 
 div.menu-category {
-    border-bottom: 0px solid gray; /* Block layout without standard underlines */
+    border-bottom: 0px solid gray; 
     margin-top: 0.8em;
     padding-top: 0.2em;
     padding-bottom: 0.1em;
@@ -179,12 +185,33 @@ div.menu-item {
     color: black;
     text-decoration: none;
     border-bottom: 1px gray solid;
-    margin-left: 0.5em;
 }
 
 #layout-menu a.current:link, #layout-menu a.current:visited {
     color: #203060;
     border-bottom: 1px gray solid;
+    font-weight: bold;
+}
+
+/* --- Bottom-Anchored Navigation Control --- */
+#back-to-top {
+    margin-top: auto; 
+    padding-top: 30px;
+    padding-bottom: 10px;
+}
+
+#back-to-top a {
+    text-decoration: none;
+    font-weight: bold;
+    color: #305080;
+    display: inline-block;
+    font-size: 0.9em;   /* Scaled down slightly to look proportional */
+    border-bottom: none;
+}
+
+#back-to-top a:hover {
+    color: #203060;
+    border-bottom: 1px dashed #203060;
 }
 
 /* --- Lists --- */
@@ -353,107 +380,4 @@ div#footer a {
 /* --- Print Settings --- */
 @media print {
     #layout-menu { display: none; }
-}
-/* Extra css file for personal jemdoc customizations. */
-/* Copyright (C) Jacob Mattingley 2007. */
-
-/* Reduce interline space for the entire page */
-body {
-    line-height: 1.3;
-}
-
-a, a > tt {
-    color: #305080;
-}
-a:hover {
-    border-bottom: 1px #305080 dotted;
-}
-
-div#toptitle {
-    margin-bottom: 1.3em;
-    border-bottom: 1px solid #c0c0c0;
-}
-
-h1, h2, h3, #layout-menu a.current:link, #layout-menu a.current:visited {
-    color: #203060;
-}
-
-h1, h2, h3 {
-    border-bottom: 1px solid #c0c0c0;
-}
-
-div#footer-text {
-    padding-bottom: 0;
-}
-
-div.blocktitle {
-    color: #203070;
-}
-
-div.blockcontent {
-    border: 1px solid #c0c0c0;
-}
-
-div#footer-text {
-    padding-bottom: 8px;
-}
-
-
-/* ==========================================================================
-   Single-Page Fixed Layout (Narrow Side Menu & Bottom Navigation Arrow)
-   ========================================================================== */
-
-html {
-    scroll-behavior: smooth;
-}
-
-/* Break Jemdoc's standard table layout constraints */
-#tlayout {
-    display: block;
-    width: 100%;
-}
-
-/* Fixes and narrows the left column sidebar */
-#layout-menu {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 160px;       /* Compact narrow width */
-    height: 100vh;      /* Full viewport height */
-    box-sizing: border-box;
-    padding: 25px 15px; /* Clean, condensed padding padding */
-    overflow-y: auto;   /* Permits menu scrolling if items expand */
-    background-color: #ffffff; 
-    
-    /* Flexbox layout to cleanly anchor the top link down */
-    display: flex;
-    flex-direction: column;
-}
-
-/* Offsets the main reading pane to prevent sidebar overlap */
-#layout-content {
-    margin-left: 190px; /* Accounts for 160px menu + a clean 30px whitespace gap */
-    width: calc(100% - 190px);
-    box-sizing: border-box;
-    padding: 25px;
-}
-
-/* Pushes the "Back to top" block to the absolute bottom of the left column */
-#back-to-top {
-    margin-top: auto; 
-    padding-top: 30px;
-    padding-bottom: 10px;
-}
-
-#back-to-top a {
-    text-decoration: none;
-    font-weight: bold;
-    color: #305080;
-    display: inline-block;
-    font-size: 0.9em;   /* Scaled appropriately for the narrow sidebar menu */
-}
-
-#back-to-top a:hover {
-    color: #203060;
-    border-bottom: 1px dashed #203060;
 }
