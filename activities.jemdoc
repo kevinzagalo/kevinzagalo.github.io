@@ -1,4 +1,4 @@
-# jemdoc: menu{MENU}{activities.html}
+# jemdoc: menu{MENU}{activities.html}, addcss{css/jacob.css}
 = Activities
 
 == Invited talks

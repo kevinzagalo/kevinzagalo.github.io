@@ -1,4 +1,4 @@
-# jemdoc: menu{MENU}{teaching.html}
+# jemdoc: menu{MENU}{teaching.html}, addcss{css/jacob.css}
 = Teaching
 
 == Currently:
