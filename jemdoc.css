@@ -354,60 +354,60 @@ div#footer a {
 @media print {
     #layout-menu { display: none; }
 }
+
 /* ==========================================================================
-   Single-Page Layout Additions (Sticky Menu & Smooth Scroll)
+   Modern Fixed Left Column Menu Layout with Bottom Anchor Arrow
    ========================================================================== */
 
 html {
-    scroll-behavior: smooth; /* Enables smooth scrolling for anchor links */
+    scroll-behavior: smooth;
 }
 
-/* Break Jemdoc's default table layout to allow fixed positioning */
-table#tlayout {
+#tlayout {
     display: block;
     width: 100%;
 }
 
+/* Fixes the left column sidebar layout */
 #layout-menu {
     position: fixed;
     top: 0;
     left: 0;
-    width: 220px;      /* Fixed width for the menu */
-    height: 100vh;     /* Full viewport height */
-    overflow-y: auto;  /* Scrollable if menu items get too tall */
-    display: block;
+    width: 220px;
+    height: 100vh;
     box-sizing: border-box;
+    padding: 30px 20px;
+    overflow-y: auto;
+    background-color: #ffffff; /* Match your page background color */
+    
+    /* Flexbox settings to push the top-link down */
+    display: flex;
+    flex-direction: column;
 }
 
+/* Offsets the main pane to prevent menu overlapping */
 #layout-content {
-    display: block;
-    margin-left: 220px; /* Offset content exactly by the menu's width */
-    width: calc(100% - 220px);
+    margin-left: 250px;
+    width: calc(100% - 250px);
     box-sizing: border-box;
+    padding: 30px;
 }
 
-/* --- Back to Top Arrow --- */
+/* Standardizes the top link position within the left flexbox container */
 #back-to-top {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    background-color: #203060;
-    color: white;
-    width: 45px;
-    height: 45px;
-    line-height: 42px;
-    text-align: center;
-    border-radius: 50%;
-    font-size: 24px;
-    font-weight: bold;
-    border: none;
-    z-index: 1000;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-    transition: background-color 0.2s ease;
+    margin-top: auto; 
+    padding-top: 40px;
+    padding-bottom: 10px;
 }
 
-#back-to-top:hover {
-    background-color: #305080;
-    border-bottom: none;
-    color: white;
+#back-to-top a {
+    text-decoration: none;
+    font-weight: bold;
+    color: #203060;
+    display: inline-block;
+}
+
+#back-to-top a:hover {
+    color: #305080;
+    border-bottom: 1px dashed #305080;
 }

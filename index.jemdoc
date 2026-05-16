@@ -4,7 +4,7 @@
 
 Assistant professor in the telecommunication department of INSA Lyon. I do my research in the [https://team.inria.fr/maracas/ Maracas] team of Inria Lyon hosted in the [https://www.citi-lab.fr/ CITI] laboratory.\nI currently work on latency-focused analyses of random wireless networks based on stochastic geometry approaches. I also host the [https://team.inria.fr/maracas/seminar/ MARACAS seminar].
 
-=== Research interests
+== Research interests
 - Real-time scheduling
 - Random wireless networks
 
@@ -14,7 +14,8 @@ Assistant professor in the telecommunication department of INSA Lyon. I do my re
 0">}} [https://dblp.org/pid/276/2654.html dblp], {{<img src="img/google-scholar.png" alt="google scholar" style="width:16px; height:16px; margin:0 0 -5px 0">}} [https://scholar.google.fr/citations?user=bYcMc9YAAAAJ&hl=fr google scholar], {{<img src="img/github.png" alt="github" style="width:16px; height:16px; margin:0 0 -5px 0">}} [https://github.com/kevinzagalo github]
 
 ~~~
-== Contact
+
+= Contact
 
 CITI-Inria Lab.\n
 Office: TLC 233\n
@@ -26,7 +27,6 @@ Bat. Hedy Lamarr, 6 avenue des Arts\n
 ~~~
 
 
-# jemdoc: menu{MENU}{research.html}, addcss{jemdoc.css}
 = Research
 
 == Journals
@@ -59,8 +59,6 @@ I mainly implement things in Python.
 - A Python library for hypoexponential distributions [https://github.com/kevinzagalo/hypoexponential  {{<img src="img/link.png" alt="github" style="width:14px; height:14px; margin:0 0 -3px 0">}}]
 
 
-
-# jemdoc: menu{MENU}{teaching.html}, addcss{jemdoc.css}
 = Teaching
 
 == Currently:
@@ -86,7 +84,6 @@ I mainly implement things in Python.
 - Olena Verbytska, *Parametric estimation of response time distributions of periodic real-time systems*, Spring 2022.
 - Margarita Tomina, *Multivariate inverse Gaussian applied to response time analysis of real-time systems*, Spring 2022.
 
-# jemdoc: menu{MENU}{activities.html}, addcss{jemdoc.css}
 = Activities
 
 == Invited talks

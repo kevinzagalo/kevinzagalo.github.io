@@ -1331,6 +1331,10 @@ def procfile(f):
   if menu:
     out(f.outf, f.conf['menustart'])
     insertmenuitems(*menu)
+    
+    # Inject the Top link directly into the bottom of the left column
+    out(f.outf, '<div id="back-to-top"><a href="#">&uarr; Back to top</a></div>\n')
+    
     out(f.outf, f.conf['menuend'])
   else:
     out(f.outf, f.conf['nomenu'])
@@ -1505,9 +1509,6 @@ def procfile(f):
     out(f.outf, f.conf['menulastbit'])
   else:
     out(f.outf, f.conf['nomenulastbit'])
-
-  # Automatically inject the Back-to-Top arrow
-  out(f.outf, '<a href="#" id="back-to-top" title="Go to top">&uarr;</a>\n')
 
   out(f.outf, f.conf['bodyend'])
 
