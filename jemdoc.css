@@ -157,7 +157,7 @@ div#subtitle {
 /* Offsets the main reading pane to prevent sidebar overlap */
 #layout-content {
     /* Reduced from 190px to 175px (places text exactly 15px past the line) */
-    margin-left: 150px; 
+    margin-left: 120px; 
     width: calc(100% - 175px);
     box-sizing: border-box;
     padding: 25px;
