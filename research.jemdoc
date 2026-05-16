@@ -1,4 +1,4 @@
-# jemdoc: menu{MENU}{research.html}, addcss{css/exp.css}
+# jemdoc: menu{MENU}{research.html}, addcss{css/jemdoc.css}
 = Research
 
 == Journals
