@@ -354,3 +354,60 @@ div#footer a {
 @media print {
     #layout-menu { display: none; }
 }
+/* ==========================================================================
+   Single-Page Layout Additions (Sticky Menu & Smooth Scroll)
+   ========================================================================== */
+
+html {
+    scroll-behavior: smooth; /* Enables smooth scrolling for anchor links */
+}
+
+/* Break Jemdoc's default table layout to allow fixed positioning */
+table#tlayout {
+    display: block;
+    width: 100%;
+}
+
+#layout-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 220px;      /* Fixed width for the menu */
+    height: 100vh;     /* Full viewport height */
+    overflow-y: auto;  /* Scrollable if menu items get too tall */
+    display: block;
+    box-sizing: border-box;
+}
+
+#layout-content {
+    display: block;
+    margin-left: 220px; /* Offset content exactly by the menu's width */
+    width: calc(100% - 220px);
+    box-sizing: border-box;
+}
+
+/* --- Back to Top Arrow --- */
+#back-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background-color: #203060;
+    color: white;
+    width: 45px;
+    height: 45px;
+    line-height: 42px;
+    text-align: center;
+    border-radius: 50%;
+    font-size: 24px;
+    font-weight: bold;
+    border: none;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    transition: background-color 0.2s ease;
+}
+
+#back-to-top:hover {
+    background-color: #305080;
+    border-bottom: none;
+    color: white;
+}

@@ -1502,6 +1502,9 @@ def procfile(f):
   else:
     out(f.outf, f.conf['nomenulastbit'])
 
+  # Auto-inject the Back-to-Top arrow
+  out(f.outf, '<a href="#" id="back-to-top" title="Go to top">&uarr;</a>\n')
+
   out(f.outf, f.conf['bodyend'])
 
   if f.outf is not sys.stdout:
