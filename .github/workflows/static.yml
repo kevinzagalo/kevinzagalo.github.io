@@ -25,7 +25,7 @@ jobs:
         run: |
           mkdir public
           python3 jemdoc.py -o public/ *.jemdoc
-          cp -r css public/
+          cp jemdoc.css public/
           cp -r docs public/
           cp -r img public/
 
