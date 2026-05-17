@@ -287,7 +287,7 @@ class NoEqSupport(Exception):
   pass
 
 def format_bib_categorized(filename, f_control):
-  """Parses a .bib file robustly, handling DOIs and custom arXiv:eprint link formats."""
+  """Parses a .bib file robustly, managing NNT/DOI priority, unlinked titles, and fixed arXiv formats."""
   import re
   try:
     with open(filename, 'r', encoding='utf-8') as bibf:
@@ -386,7 +386,7 @@ def format_bib_categorized(filename, f_control):
     url = fields.get('url', fields.get('pdf', ''))
     doi = fields.get('doi', '')
     eprint = fields.get('eprint', '')
-    archive_prefix = fields.get('archiveprefix', '').lower()
+    note = fields.get('note', '')
 
     if not title and not author:
       continue
@@ -398,9 +398,8 @@ def format_bib_categorized(filename, f_control):
     if eprint:
       is_arxiv = True
       arxiv_id = eprint
-    elif 'arxiv' in venue.lower():
+    elif venue and 'arxiv' in venue.lower():
       is_arxiv = True
-      # Try to extract numbers like 2301.12345 or sub/1234567 out of the string
       match_id = re.search(r'(?:arxiv:\s*|abs/|/)?(\d{4}\.\d{4,5}|[a-z-]+/\d{7})', venue, re.IGNORECASE)
       if match_id:
         arxiv_id = match_id.group(1)
@@ -409,17 +408,10 @@ def format_bib_categorized(filename, f_control):
         if match_url:
           arxiv_id = match_url.group(1)
 
-    # Build clean jemdoc formatting string
+    # Build clean jemdoc formatting string (TITLES ARE NOW UNLINKED)
     item_str = "- "
     if author: item_str += "%s. " % author
-    if title:
-      # If it's an arXiv entry and no primary alternative link exists, use the arXiv link for the title
-      if is_arxiv and arxiv_id and not url:
-        item_str += "[https://arxiv.org/abs/%s *%s*]. " % (arxiv_id, title)
-      elif url:
-        item_str += "[%s *%s*]. " % (url, title)
-      else:
-        item_str += "*%s*. " % title
+    if title: item_str += "*%s*. " % title
         
     if entry_type in ('phdthesis', 'mastersthesis'):
       type_label = "PhD thesis" if entry_type == 'phdthesis' else "Master's thesis"
@@ -428,7 +420,6 @@ def format_bib_categorized(filename, f_control):
       else:
         item_str += "%s, " % type_label
     else:
-      # For arXiv entries, don't repeat "arXiv preprint arXiv:xxx" as the journal name
       if is_arxiv:
         pass 
       elif venue: 
@@ -436,26 +427,32 @@ def format_bib_categorized(filename, f_control):
         
     if year: item_str += "%s." % year
 
-    # Append formatted arXiv string with its hyperlink
+    # Append formatted arXiv link if present (FIXED SYNTAX)
     if is_arxiv and arxiv_id:
       arxiv_url = "https://arxiv.org/abs/%s" % arxiv_id
-      item_str += " [ %s arXiv:%s]" % (arxiv_url, arxiv_id)
+      item_str += " [https://arxiv.org/abs/%s arXiv:%s]" % (arxiv_id, arxiv_id)
 
-    # Append DOI if present
-    if doi:
-      if doi.startswith('http://') or doi.startswith('https://'):
-        doi_url = doi
-        doi_display = doi.split('doi.org/')[-1]
-      else:
-        doi_url = "https://doi.org/%s" % doi
-        doi_display = doi
-      item_str += " DOI: [%s %s]" % (doi_url, doi_display)
+    # Handle NNT vs DOI Prioritization for Thesis entries
+    if entry_type in ('phdthesis', 'mastersthesis') and note and ('nnt' in note.lower() or any(char.isdigit() for char in note)):
+      # Clean up string to isolate the number identifier
+      nnt_clean = note.replace('NNT:', '').replace('nnt:', '').replace('NNT', '').strip()
+      nnt_url = "https://theses.fr/%s" % nnt_clean
+      item_str += " [https://theses.fr/%s NNT: %s]" % (nnt_clean, nnt_clean)
+    else:
+      # Append standard DOI link if present or if fallback is active
+      if doi:
+        if doi.startswith('http://') or doi.startswith('https://'):
+          doi_url = doi
+          doi_display = doi.split('doi.org/')[-1]
+        else:
+          doi_url = "https://doi.org/%s" % doi
+          doi_display = doi
+        item_str += " DOI: [%s %s]" % (doi_url, doi_display)
 
-    # Categorize items explicitly override: force arXiv records to Preprints unless explicitly published
+    # Categorize items explicitly
     if is_arxiv and entry_type != 'article':
       preprints.append(item_str)
     elif entry_type == 'article':
-      # If it is explicitly in an archive journal block without volume metadata, sort to preprints
       if is_arxiv and not fields.get('volume', ''):
         preprints.append(item_str)
       else:
