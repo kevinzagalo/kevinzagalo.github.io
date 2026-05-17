@@ -309,7 +309,13 @@ def format_bib_categorized(filename, f_control):
     body_split = entry.split(',', 1)
     if len(body_split) < 2: continue
     
-    entry_type = body_split[0].split('{')[0].strip().lower()
+    # FIXED: Extract strictly the entry type before the opening curly brace
+    header_part = body_split[0].strip()
+    if '{' in header_part:
+      entry_type = header_part.split('{')[0].strip().lower()
+    else:
+      entry_type = header_part.lower()
+      
     body = body_split[1]
     
     # Extract fields
@@ -345,7 +351,7 @@ def format_bib_categorized(filename, f_control):
         
     if year: item_str += "%s." % year
 
-    # Sort into categories based on standard BibTeX entry types
+    # Sort into categories cleanly now that entry_type is properly isolated
     if entry_type == 'article':
       journals.append(item_str)
     elif entry_type in ('inproceedings', 'conference', 'proceedings'):
@@ -355,7 +361,7 @@ def format_bib_categorized(filename, f_control):
     elif entry_type in ('unpublished', 'techreport', 'preprint'):
       preprints.append(item_str)
     else:
-      # Fallback default bucket
+      # Fallback bucket
       preprints.append(item_str)
 
   # Assemble the separated jemdoc sections
