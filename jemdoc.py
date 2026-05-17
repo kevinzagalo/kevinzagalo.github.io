@@ -287,7 +287,7 @@ class NoEqSupport(Exception):
   pass
 
 def format_bib_categorized(filename, f_control):
-  """Parses a .bib file robustly by maintaining exact nested brace limits."""
+  """Parses a .bib file robustly, maintaining brace limits and formatting DOIs."""
   import re
   try:
     with open(filename, 'r', encoding='utf-8') as bibf:
@@ -388,6 +388,7 @@ def format_bib_categorized(filename, f_control):
     venue = fields.get('journal', fields.get('booktitle', fields.get('school', fields.get('institution', fields.get('publisher', fields.get('howpublished', ''))))))
     year = fields.get('year', '')
     url = fields.get('url', fields.get('pdf', ''))
+    doi = fields.get('doi', '') # Added to capture the field from your .bib file
     
     if not title and not author:
       continue
@@ -412,6 +413,19 @@ def format_bib_categorized(filename, f_control):
         
     if year: item_str += "%s." % year
 
+    # NEW: Handle DOI attachment and hyperlinking
+    if doi:
+      # If the DOI string doesn't already contain a URL protocol, make it an official resolver link
+      if doi.startswith('http://') or doi.startswith('https://'):
+        doi_url = doi
+        # Clean up the raw DOI display tag if it's a full URL
+        doi_display = doi.split('doi.org/')[-1]
+      else:
+        doi_url = "https://doi.org/%s" % doi
+        doi_display = doi
+        
+      item_str += " DOI: [%s %s]" % (doi_url, doi_display)
+
     # Categorize items explicitly
     if entry_type == 'article':
       journals.append(item_str)
@@ -421,13 +435,9 @@ def format_bib_categorized(filename, f_control):
       theses.append(item_str)
     else:
       preprints.append(item_str)
-  # ==========================================================================
+
   # Assemble the separated jemdoc sections using '=== ' levels
-  # ==========================================================================
-  
-  # FIXED: Start with extra newlines to ensure the first section splits cleanly
-  output_jemdoc = "\n\n" 
-  
+  output_jemdoc = "\n\n"
   if journals:
     output_jemdoc += "=== Journals\n" + "\n".join(journals) + "\n\n"
   if conferences:
@@ -437,7 +447,6 @@ def format_bib_categorized(filename, f_control):
   if theses:
     output_jemdoc += "=== Theses\n" + "\n".join(theses) + "\n\n"
 
-  return output_jemdoc
   return output_jemdoc
 
 def raisejandal(msg, line=0):
