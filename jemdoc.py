@@ -421,9 +421,13 @@ def format_bib_categorized(filename, f_control):
       theses.append(item_str)
     else:
       preprints.append(item_str)
-
+  # ==========================================================================
   # Assemble the separated jemdoc sections using '=== ' levels
-  output_jemdoc = ""
+  # ==========================================================================
+  
+  # FIXED: Start with extra newlines to ensure the first section splits cleanly
+  output_jemdoc = "\n\n" 
+  
   if journals:
     output_jemdoc += "=== Journals\n" + "\n".join(journals) + "\n\n"
   if conferences:
@@ -433,6 +437,7 @@ def format_bib_categorized(filename, f_control):
   if theses:
     output_jemdoc += "=== Theses\n" + "\n".join(theses) + "\n\n"
 
+  return output_jemdoc
   return output_jemdoc
 
 def raisejandal(msg, line=0):
