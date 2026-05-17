@@ -24,5 +24,68 @@ Bat. Hedy Lamarr, 6 avenue des Arts\n
 
 {{<img src="img/mail.png" style="height:22px; margin:0 0 -5px 0" alt="mail">}}
 
+= Research
 
+== Publications
+
+#includebib{publications.bib}
+
+== Software
+
+I mainly implement things in Python.
+
+- An adapted version of [https://maximecheramy.github.io/simso/ SimSo] for probabilistic execution times, implemented with Marc-Antoine Auvray [https://github.com/kevinzagalo/simso {{<img src="img/link.png" alt="github" style="width:14px; height:14px; margin:0 0 -3px 0">}}]
+- A Python library for the reparameterized inverse Gaussian distribution, implemented with Olena Verbytska [https://github.com/kevinzagalo/rInverseGaussian  {{<img src="img/link.png" alt="github" style="width:14px; height:14px; margin:0 0 -3px 0">}}]
+- A Python library for hypoexponential distributions [https://github.com/kevinzagalo/hypoexponential  {{<img src="img/link.png" alt="github" style="width:14px; height:14px; margin:0 0 -3px 0">}}]
+
+
+= Teaching
+
+== Currently:
+	- Radio access networks, INSA Lyon, Spring 2026.
+	- Digital communications, INSA Lyon, Spring 2026.
+
+=== Past lectures:
+	- Advanced digital communications, INSA Lyon, Fall 2025.
+	- Network performance evaluation, INSA Lyon, Fall 2025.
+	- Introduction to probabilities, INSA Lyon, Fall 2025.
+	- Radio Access Network (tutorials), INSA Lyon, Spring 2025.
+	- Digital communications, INSA Lyon, Spring 2025.
+	- Hertzian and optical propagation, INSA Lyon, Fall 2024.
+	- Probabilities, INSA Lyon, Fall 2024.
+	- Machine learning, ESIEE, Université Gustave Eiffel, Fall 2021.
+	- Probabilities, ESIEE, Université Gustave Eiffel, Spring 2021.
+	- Machine learning, ESIEE, Université Gustave Eiffel, Fall 2020.
+
+== Student interns
+
+- Johan Bartosik, *GNN for Joint User Detection and Channel Estimation*, 2025.
+- Marc-Antoine Auvray, *Autopilot execution time prediction from sensors data*, 2022.
+- Olena Verbytska, *Parametric estimation of response time distributions of periodic real-time systems*, Spring 2022.
+- Margarita Tomina, *Multivariate inverse Gaussian applied to response time analysis of real-time systems*, Spring 2022.
+
+
+
+= Activities
+
+== Invited talks
+- PEPR Futur networks, PC9 Found Seminar, April, 27 2026.
+- The Way to 6G Workshop, IEEE MASCOTS, October 23, 2025.
+- Journées PEPR Réseaux du futur, Bordeaux, June 2, 2025.
+- France PhD Information Theory Workshop, Telecom Paris, June 7, 2024. [https://perso.telecom-paristech.fr/wigger/France_PhD_Workshop/Zagalo_poster.pdf poster]
+- Journées PEPR Réseaux du futur, Grenoble, March 20, 2024.
+- MARACAS Seminar, Inria Lyon, October 19, 2023. 
+- Real-Time Systems Group Seminar, Max Planck Institute for Software Systems, July 12, 2023.
+- Verification Seminar, IRIF, February 20, 2023.
+
+== Committees
+- External Reviewer of [https://globecom2026.ieee-globecom.org Globecom 2026].
+- Program committee member of [https://rtcsa2026.github.io/ RTCSA 2026].
+- External Reviewer of [http://wcnc2026.ieee-wcnc.org/group/21 WCNC 2026].
+- Program committee member of [https://rtcsa2025.github.io/ RTCSA 2025].
+- Local organization of [http://2022.rtss.org/ RTSS 2022].
+- Web chair of [https://rtns2022.inria.fr RTNS 2022].
+- Workshop Committee member of [https://rtns2021.univ-nantes.fr/jrwrtc/ JRWRTC 2022].
+- Workshop Committee member of [https://rtns2021.univ-nantes.fr/jrwrtc/ JRWRTC 2021].
+- Local organization of [https://rtns2020.inria.fr/ RTNS 2020].
 
