@@ -367,16 +367,16 @@ def format_bib_categorized(filename, f_control):
   # Assemble the separated jemdoc sections
   output_jemdoc = ""
   if journals:
-    output_jemdoc += "== Journals\n" + "\n".join(journals) + "\n\n"
+    output_jemdoc += "=== Journals\n" + "\n".join(journals) + "\n\n"
   if conferences:
-    output_jemdoc += "== Conferences\n" + "\n".join(conferences) + "\n\n"
+    output_jemdoc += "=== Conferences\n" + "\n".join(conferences) + "\n\n"
   if preprints:
-    output_jemdoc += "== Preprints\n" + "\n".join(preprints) + "\n\n"
+    output_jemdoc += "=== Preprints\n" + "\n".join(preprints) + "\n\n"
   if theses:
-    output_jemdoc += "== Theses\n" + "\n".join(theses) + "\n\n"
+    output_jemdoc += "=== Theses\n" + "\n".join(theses) + "\n\n"
 
   return output_jemdoc
-  
+
 def raisejandal(msg, line=0):
   if line == 0:
     s = "%s" % msg

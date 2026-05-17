@@ -1,6 +1,8 @@
 # jemdoc: menu{MENU}{research.html}, addcss{jemdoc.css}
 = Research
 
+== Publications
+
 #includebib{publications.bib}
 
 == Software
