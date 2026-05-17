@@ -287,13 +287,13 @@ class NoEqSupport(Exception):
   pass
 
 def format_bib_categorized(filename, f_control):
-  """Parses a .bib file and returns separated jemdoc syntax sections."""
+  """Parses a .bib file robustly by finding exact matching outer braces."""
   import re
   try:
     with open(filename, 'r', encoding='utf-8') as bibf:
       content = bibf.read()
   except IOError:
-    return "== Error\nCould not open %s\n" % filename
+    return "=== Error\nCould not open %s\n" % filename
 
   # Buckets for each section
   journals = []
@@ -301,36 +301,65 @@ def format_bib_categorized(filename, f_control):
   preprints = []
   theses = []
 
-  entries_raw = content.split('@')[1:]
-  for entry in entries_raw:
-    entry = entry.strip()
-    if not entry: continue
+  # Find all instances of @type
+  entry_starts = list(re.finditer(r'@([a-zA-Z]+)', content))
+  
+  for i, start_match in enumerate(entry_starts):
+    entry_type = start_match.group(1).strip().lower()
     
-    body_split = entry.split(',', 1)
-    if len(body_split) < 2: continue
+    # Locate where the body block begins right after the type definition
+    search_start = start_match.end()
+    brace_start = content.find('{', search_start)
+    if brace_start == -1: continue
     
-    # FIXED: Extract strictly the entry type before the opening curly brace
-    header_part = body_split[0].strip()
-    if '{' in header_part:
-      entry_type = header_part.split('{')[0].strip().lower()
-    else:
-      entry_type = header_part.lower()
-      
-    body = body_split[1]
-    
-    # Extract fields
-    fields = {}
-    matches = re.finditer(r'([a-zA-Z0-9_]+)\s*=\s*[\{"](.*?)[\}"]', body, re.DOTALL)
-    for m in matches:
-      clean_val = m.group(2).replace('{', '').replace('}', '').replace('\n', ' ').strip()
-      fields[m.group(1).lower()] = clean_val
+    # Extract everything inside the balanced outermost pair of curly braces
+    brace_count = 0
+    body = ""
+    for idx in range(brace_start, len(content)):
+      char = content[idx]
+      if char == '{':
+        brace_count += 1
+      elif char == '}':
+        brace_count -= 1
         
+      if brace_count == 0:
+        body = content[brace_start+1:idx]
+        break
+    
+    if not body: continue
+
+    # Extract fields cleanly using an aggressive value capture strategy
+    fields = {}
+    field_matches = re.finditer(r'([a-zA-Z0-9_]+)\s*=\s*([{\"])(.*?)([{\"])\s*(?:,|\s*\n|$)', body, re.DOTALL)
+    
+    # Fallback field finder if commas or brackets vary
+    if not field_matches:
+        field_matches = re.finditer(r'([a-zA-Z0-9_]+)\s*=\s*[\{\"](.*?)[\}\"]', body, re.DOTALL)
+
+    for fm in field_matches:
+      field_name = fm.group(1).lower()
+      # Clean up internal structural latex markers
+      clean_val = fm.group(2).replace('{', '').replace('}', '').replace('\n', ' ').strip()
+      fields[field_name] = clean_val
+      
+    # Secondary field extraction sweep to guarantee we capture unbracketed strings/years
+    for line in body.split('\n'):
+      if '=' in line:
+        parts = line.split('=', 1)
+        k = parts[0].strip().lower()
+        v = parts[1].strip().strip(',').strip('{').strip('}').strip('"')
+        if k not in fields:
+          fields[k] = v
+
     author = fields.get('author', '').replace(' and ', ', ')
     title = fields.get('title', '')
     venue = fields.get('journal', fields.get('booktitle', fields.get('school', fields.get('institution', fields.get('publisher', fields.get('howpublished', ''))))))
     year = fields.get('year', '')
     url = fields.get('url', fields.get('pdf', ''))
     
+    if not title and not author:
+      continue
+
     # Build a clean jemdoc list-item string
     item_str = "- "
     if author: item_str += "%s. " % author
@@ -351,20 +380,17 @@ def format_bib_categorized(filename, f_control):
         
     if year: item_str += "%s." % year
 
-    # Sort into categories cleanly now that entry_type is properly isolated
+    # Categorize items explicitly
     if entry_type == 'article':
       journals.append(item_str)
     elif entry_type in ('inproceedings', 'conference', 'proceedings'):
       conferences.append(item_str)
     elif entry_type in ('phdthesis', 'mastersthesis'):
       theses.append(item_str)
-    elif entry_type in ('unpublished', 'techreport', 'preprint'):
-      preprints.append(item_str)
     else:
-      # Fallback bucket
       preprints.append(item_str)
 
-  # Assemble the separated jemdoc sections
+  # Assemble the separated jemdoc sections using '===' levels
   output_jemdoc = ""
   if journals:
     output_jemdoc += "=== Journals\n" + "\n".join(journals) + "\n\n"
