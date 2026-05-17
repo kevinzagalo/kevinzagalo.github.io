@@ -287,7 +287,7 @@ class NoEqSupport(Exception):
   pass
 
 def format_bib_categorized(filename, f_control):
-  """Parses a .bib file robustly by finding exact matching outer braces."""
+  """Parses a .bib file robustly by maintaining exact nested brace limits."""
   import re
   try:
     with open(filename, 'r', encoding='utf-8') as bibf:
@@ -301,18 +301,17 @@ def format_bib_categorized(filename, f_control):
   preprints = []
   theses = []
 
-  # Find all instances of @type
+  # Locate all occurrences of @type
   entry_starts = list(re.finditer(r'@([a-zA-Z]+)', content))
   
-  for i, start_match in enumerate(entry_starts):
+  for start_match in entry_starts:
     entry_type = start_match.group(1).strip().lower()
     
-    # Locate where the body block begins right after the type definition
     search_start = start_match.end()
     brace_start = content.find('{', search_start)
     if brace_start == -1: continue
     
-    # Extract everything inside the balanced outermost pair of curly braces
+    # Balanced bracket extraction for the entry body
     brace_count = 0
     body = ""
     for idx in range(brace_start, len(content)):
@@ -328,29 +327,62 @@ def format_bib_categorized(filename, f_control):
     
     if not body: continue
 
-    # Extract fields cleanly using an aggressive value capture strategy
+    # Parse key-value pairs cleanly out of the body block
     fields = {}
-    field_matches = re.finditer(r'([a-zA-Z0-9_]+)\s*=\s*([{\"])(.*?)([{\"])\s*(?:,|\s*\n|$)', body, re.DOTALL)
+    i = 0
+    # Skip past the citation key (everything before the first comma)
+    first_comma = body.find(',')
+    if first_comma != -1:
+      i = first_comma + 1
     
-    # Fallback field finder if commas or brackets vary
-    if not field_matches:
-        field_matches = re.finditer(r'([a-zA-Z0-9_]+)\s*=\s*[\{\"](.*?)[\}\"]', body, re.DOTALL)
-
-    for fm in field_matches:
-      field_name = fm.group(1).lower()
-      # Clean up internal structural latex markers
-      clean_val = fm.group(2).replace('{', '').replace('}', '').replace('\n', ' ').strip()
-      fields[field_name] = clean_val
+    while i < len(body):
+      # Find the key name
+      while i < len(body) and (body[i].isspace() or body[i] == ','):
+        i += 1
+      if i >= len(body): break
       
-    # Secondary field extraction sweep to guarantee we capture unbracketed strings/years
-    for line in body.split('\n'):
-      if '=' in line:
-        parts = line.split('=', 1)
-        k = parts[0].strip().lower()
-        v = parts[1].strip().strip(',').strip('{').strip('}').strip('"')
-        if k not in fields:
-          fields[k] = v
+      equal_sign = body.find('=', i)
+      if equal_sign == -1: break
+      
+      key_name = body[i:equal_sign].strip().lower()
+      i = equal_sign + 1
+      
+      # Find the value start
+      while i < len(body) and body[i].isspace():
+        i += 1
+      if i >= len(body): break
+      
+      # Extract value balancing quotes or braces properly
+      val_chars = []
+      if body[i] == '{':
+        v_brace = 1
+        i += 1
+        while i < len(body):
+          if body[i] == '{': v_brace += 1
+          elif body[i] == '}': v_brace -= 1
+          
+          if v_brace == 0:
+            i += 1
+            break
+          val_chars.append(body[i])
+          i += 1
+      elif body[i] == '"':
+        i += 1
+        while i < len(body):
+          if body[i] == '"':
+            i += 1
+            break
+          val_chars.append(body[i])
+          i += 1
+      else:
+        # Unquoted string/integer value (like year = 2026)
+        while i < len(body) and body[i] != ',' and not body[i].isspace():
+          val_chars.append(body[i])
+          i += 1
+          
+      fields[key_name] = "".join(val_chars).replace('\n', ' ').strip()
 
+    # Field assembly mapping
     author = fields.get('author', '').replace(' and ', ', ')
     title = fields.get('title', '')
     venue = fields.get('journal', fields.get('booktitle', fields.get('school', fields.get('institution', fields.get('publisher', fields.get('howpublished', ''))))))
@@ -360,7 +392,7 @@ def format_bib_categorized(filename, f_control):
     if not title and not author:
       continue
 
-    # Build a clean jemdoc list-item string
+    # Build clean jemdoc formatting string
     item_str = "- "
     if author: item_str += "%s. " % author
     if title:
@@ -390,7 +422,7 @@ def format_bib_categorized(filename, f_control):
     else:
       preprints.append(item_str)
 
-  # Assemble the separated jemdoc sections using '===' levels
+  # Assemble the separated jemdoc sections using '=== ' levels
   output_jemdoc = ""
   if journals:
     output_jemdoc += "=== Journals\n" + "\n".join(journals) + "\n\n"
