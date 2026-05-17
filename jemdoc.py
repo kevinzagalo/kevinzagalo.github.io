@@ -287,7 +287,7 @@ class NoEqSupport(Exception):
   pass
 
 def format_bib_categorized(filename, f_control):
-  """Parses a .bib file robustly, maintaining brace limits and formatting DOIs."""
+  """Parses a .bib file robustly, handling DOIs and custom arXiv:eprint link formats."""
   import re
   try:
     with open(filename, 'r', encoding='utf-8') as bibf:
@@ -330,13 +330,12 @@ def format_bib_categorized(filename, f_control):
     # Parse key-value pairs cleanly out of the body block
     fields = {}
     i = 0
-    # Skip past the citation key (everything before the first comma)
+    # Skip past the citation key
     first_comma = body.find(',')
     if first_comma != -1:
       i = first_comma + 1
     
     while i < len(body):
-      # Find the key name
       while i < len(body) and (body[i].isspace() or body[i] == ','):
         i += 1
       if i >= len(body): break
@@ -347,12 +346,10 @@ def format_bib_categorized(filename, f_control):
       key_name = body[i:equal_sign].strip().lower()
       i = equal_sign + 1
       
-      # Find the value start
       while i < len(body) and body[i].isspace():
         i += 1
       if i >= len(body): break
       
-      # Extract value balancing quotes or braces properly
       val_chars = []
       if body[i] == '{':
         v_brace = 1
@@ -375,7 +372,6 @@ def format_bib_categorized(filename, f_control):
           val_chars.append(body[i])
           i += 1
       else:
-        # Unquoted string/integer value (like year = 2026)
         while i < len(body) and body[i] != ',' and not body[i].isspace():
           val_chars.append(body[i])
           i += 1
@@ -388,16 +384,39 @@ def format_bib_categorized(filename, f_control):
     venue = fields.get('journal', fields.get('booktitle', fields.get('school', fields.get('institution', fields.get('publisher', fields.get('howpublished', ''))))))
     year = fields.get('year', '')
     url = fields.get('url', fields.get('pdf', ''))
-    doi = fields.get('doi', '') # Added to capture the field from your .bib file
-    
+    doi = fields.get('doi', '')
+    eprint = fields.get('eprint', '')
+    archive_prefix = fields.get('archiveprefix', '').lower()
+
     if not title and not author:
       continue
+
+    # Detect if this entry is an arXiv preprint
+    is_arxiv = False
+    arxiv_id = ""
+    
+    if eprint:
+      is_arxiv = True
+      arxiv_id = eprint
+    elif 'arxiv' in venue.lower():
+      is_arxiv = True
+      # Try to extract numbers like 2301.12345 or sub/1234567 out of the string
+      match_id = re.search(r'(?:arxiv:\s*|abs/|/)?(\d{4}\.\d{4,5}|[a-z-]+/\d{7})', venue, re.IGNORECASE)
+      if match_id:
+        arxiv_id = match_id.group(1)
+      elif url and 'arxiv.org' in url:
+        match_url = re.search(r'abs/(\d{4}\.\d{4,5}|[a-z-]+/\d{7})', url)
+        if match_url:
+          arxiv_id = match_url.group(1)
 
     # Build clean jemdoc formatting string
     item_str = "- "
     if author: item_str += "%s. " % author
     if title:
-      if url:
+      # If it's an arXiv entry and no primary alternative link exists, use the arXiv link for the title
+      if is_arxiv and arxiv_id and not url:
+        item_str += "[https://arxiv.org/abs/%s *%s*]. " % (arxiv_id, title)
+      elif url:
         item_str += "[%s *%s*]. " % (url, title)
       else:
         item_str += "*%s*. " % title
@@ -409,26 +428,38 @@ def format_bib_categorized(filename, f_control):
       else:
         item_str += "%s, " % type_label
     else:
-      if venue: item_str += "/%s/, " % venue
+      # For arXiv entries, don't repeat "arXiv preprint arXiv:xxx" as the journal name
+      if is_arxiv:
+        pass 
+      elif venue: 
+        item_str += "/%s/, " % venue
         
     if year: item_str += "%s." % year
 
-    # NEW: Handle DOI attachment and hyperlinking
+    # Append formatted arXiv string with its hyperlink
+    if is_arxiv and arxiv_id:
+      arxiv_url = "https://arxiv.org/abs/%s" % arxiv_id
+      item_str += " [ %s arXiv:%s]" % (arxiv_url, arxiv_id)
+
+    # Append DOI if present
     if doi:
-      # If the DOI string doesn't already contain a URL protocol, make it an official resolver link
       if doi.startswith('http://') or doi.startswith('https://'):
         doi_url = doi
-        # Clean up the raw DOI display tag if it's a full URL
         doi_display = doi.split('doi.org/')[-1]
       else:
         doi_url = "https://doi.org/%s" % doi
         doi_display = doi
-        
       item_str += " DOI: [%s %s]" % (doi_url, doi_display)
 
-    # Categorize items explicitly
-    if entry_type == 'article':
-      journals.append(item_str)
+    # Categorize items explicitly override: force arXiv records to Preprints unless explicitly published
+    if is_arxiv and entry_type != 'article':
+      preprints.append(item_str)
+    elif entry_type == 'article':
+      # If it is explicitly in an archive journal block without volume metadata, sort to preprints
+      if is_arxiv and not fields.get('volume', ''):
+        preprints.append(item_str)
+      else:
+        journals.append(item_str)
     elif entry_type in ('inproceedings', 'conference', 'proceedings'):
       conferences.append(item_str)
     elif entry_type in ('phdthesis', 'mastersthesis'):
