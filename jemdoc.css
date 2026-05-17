@@ -398,3 +398,67 @@ div#footer a {
 @media print {
     #layout-menu { display: none; }
 }
+/* ==========================================================================
+   Hierarchical Section Indentation Rules
+   ========================================================================== */
+
+/* --- Level 1 Content (Under = Heading) --- */
+#layout-content h1 ~ p, 
+#layout-content h1 ~ ul, 
+#layout-content h1 ~ ol, 
+#layout-content h1 ~ div.codeblock, 
+#layout-content h1 ~ div.infoblock, 
+#layout-content h1 ~ table {
+    margin-left: 0px;
+}
+
+/* --- Level 2 Content (Under == Heading) --- */
+#layout-content h2 {
+    margin-left: 20px; /* Indents the subheading title */
+}
+#layout-content h2 ~ p, 
+#layout-content h2 ~ ul, 
+#layout-content h2 ~ ol, 
+#layout-content h2 ~ div.codeblock, 
+#layout-content h2 ~ div.infoblock, 
+#layout-content h2 ~ table {
+    margin-left: 35px; /* Indents text underneath the subheading */
+}
+
+/* --- Level 3 Content (Under === Heading) --- */
+#layout-content h3 {
+    margin-left: 40px; /* Indents the sub-subheading title */
+}
+#layout-content h3 ~ p, 
+#layout-content h3 ~ ul, 
+#layout-content h3 ~ ol, 
+#layout-content h3 ~ div.codeblock, 
+#layout-content h3 ~ div.infoblock, 
+#layout-content h3 ~ table {
+    margin-left: 55px; /* Indents text underneath the sub-subheading */
+}
+
+/* --- Reset Rules to Stop Indentation Bleeding --- */
+#layout-content h1 ~ h2 {
+    margin-left: 20px;
+}
+#layout-content h1 ~ h3 {
+    margin-left: 40px;
+}
+#layout-content h2 ~ h1, 
+#layout-content h3 ~ h1 {
+    margin-left: 0px;
+}
+#layout-content h2 ~ h1 ~ p, 
+#layout-content h2 ~ h1 ~ ul, 
+#layout-content h2 ~ h1 ~ ol {
+    margin-left: 0px;
+}
+#layout-content h3 ~ h2 {
+    margin-left: 20px;
+}
+#layout-content h3 ~ h2 ~ p, 
+#layout-content h3 ~ h2 ~ ul, 
+#layout-content h3 ~ h2 ~ ol {
+    margin-left: 35px;
+}
