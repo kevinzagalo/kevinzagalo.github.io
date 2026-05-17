@@ -26,7 +26,6 @@ jobs:
           mkdir public
           python3 jemdoc.py -o public/ *.jemdoc
           cp jemdoc.css public/
-          cp -r docs public/
           cp -r img public/
 
       - name: Upload artifact
