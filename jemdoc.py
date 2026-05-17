@@ -74,18 +74,22 @@ class controlstruct(object):
     self.eqs = eqs
     self.eqdir = eqdir
     self.eqdpi = eqdpi
-    # Default to supporting equations until we know otherwise.
     self.eqsupport = True
     self.eqcache = True
     self.eqpackages = []
     self.texlines = []
     self.analytics = None
-    self.eqbd = {} # equation base depth.
+    self.eqbd = {} 
     self.baseline = None
 
   def pushfile(self, newfile):
     self.otherfiles.insert(0, self.inf)
     self.inf = open(newfile, 'rb')
+
+  def pushfile_string(self, text_content):
+    """Allows feeding a generated string into the reader pipeline."""
+    self.otherfiles.insert(0, self.inf)
+    self.inf = io.BytesIO(bytes(text_content, encoding='utf-8'))
 
   def nextfile(self):
     self.inf.close()
@@ -282,76 +286,90 @@ class JandalError(Exception):
 class NoEqSupport(Exception):
   pass
 
-def format_bib(filename):
-  """Parses a basic .bib file and returns an HTML unordered list."""
+def format_bib_categorized(filename, f_control):
+  """Parses a .bib file and returns separated jemdoc syntax sections."""
   import re
   try:
     with open(filename, 'r', encoding='utf-8') as bibf:
       content = bibf.read()
   except IOError:
-    return "<p><b>Error: Could not open %s</b></p>\n" % filename
+    return "== Error\nCould not open %s\n" % filename
 
-  html = '<ul class="publications">\n'
-  entries_raw = content.split('@')[1:] # Split by entries
-  
+  # Buckets for each section
+  journals = []
+  conferences = []
+  preprints = []
+  theses = []
+
+  entries_raw = content.split('@')[1:]
   for entry in entries_raw:
     entry = entry.strip()
     if not entry: continue
     
-    # Split past the cite key: e.g., phdthesis{key, body...
     body_split = entry.split(',', 1)
     if len(body_split) < 2: continue
     
-    # Identify what type of entry this is (article, phdthesis, inproceedings, etc.)
     entry_type = body_split[0].split('{')[0].strip().lower()
     body = body_split[1]
     
-    # Simpler, more forgiving regex to extract key={value} or key="value"
+    # Extract fields
     fields = {}
     matches = re.finditer(r'([a-zA-Z0-9_]+)\s*=\s*[\{"](.*?)[\}"]', body, re.DOTALL)
     for m in matches:
-      # Clean up LaTeX brackets and newlines from the values
       clean_val = m.group(2).replace('{', '').replace('}', '').replace('\n', ' ').strip()
       fields[m.group(1).lower()] = clean_val
         
     author = fields.get('author', '').replace(' and ', ', ')
     title = fields.get('title', '')
-    
-    # Expanded fallback list to cover journals, conferences, theses, and tech reports
-    venue = fields.get('journal', 
-            fields.get('booktitle', 
-            fields.get('school', 
-            fields.get('institution', 
-            fields.get('publisher', 
-            fields.get('howpublished', ''))))))
-            
+    venue = fields.get('journal', fields.get('booktitle', fields.get('school', fields.get('institution', fields.get('publisher', fields.get('howpublished', ''))))))
     year = fields.get('year', '')
     url = fields.get('url', fields.get('pdf', ''))
     
-    html += '<li style="margin-bottom: 0.8em;">'
-    if author: html += "%s. " % author
-    
+    # Build a clean jemdoc list-item string
+    item_str = "- "
+    if author: item_str += "%s. " % author
     if title:
       if url:
-        html += '<a href="%s" target="_blank"><b>&ldquo;%s&rdquo;</b></a>. ' % (url, title)
+        item_str += "[%s *%s*]. " % (url, title)
       else:
-        html += '<b>&ldquo;%s&rdquo;</b>. ' % title
+        item_str += "*%s*. " % title
         
-    # Formatting rules based on the type of entry
-    if entry_type == 'phdthesis' or entry_type == 'mastersthesis':
+    if entry_type in ('phdthesis', 'mastersthesis'):
       type_label = "PhD thesis" if entry_type == 'phdthesis' else "Master's thesis"
       if venue:
-        html += "%s, <i>%s</i>, " % (type_label, venue)
+        item_str += "%s, /%s/, " % (type_label, venue)
       else:
-        html += "%s, " % type_label
+        item_str += "%s, " % type_label
     else:
-      if venue: html += "<i>%s</i>, " % venue
+      if venue: item_str += "/%s/, " % venue
         
-    if year: html += "%s." % year
-    html += "</li>\n"
-    
-  html += "</ul>\n"
-  return html
+    if year: item_str += "%s." % year
+
+    # Sort into categories based on standard BibTeX entry types
+    if entry_type == 'article':
+      journals.append(item_str)
+    elif entry_type in ('inproceedings', 'conference', 'proceedings'):
+      conferences.append(item_str)
+    elif entry_type in ('phdthesis', 'mastersthesis'):
+      theses.append(item_str)
+    elif entry_type in ('unpublished', 'techreport', 'preprint'):
+      preprints.append(item_str)
+    else:
+      # Fallback default bucket
+      preprints.append(item_str)
+
+  # Assemble the separated jemdoc sections
+  output_jemdoc = ""
+  if journals:
+    output_jemdoc += "== Journals\n" + "\n".join(journals) + "\n\n"
+  if conferences:
+    output_jemdoc += "== Conferences\n" + "\n".join(conferences) + "\n\n"
+  if preprints:
+    output_jemdoc += "== Preprints\n" + "\n".join(preprints) + "\n\n"
+  if theses:
+    output_jemdoc += "== Theses\n" + "\n".join(theses) + "\n\n"
+
+  return output_jemdoc
   
 def raisejandal(msg, line=0):
   if line == 0:
@@ -488,15 +506,17 @@ def doincludes(f, l):
   
   if l.startswith(ir):
     nf = open(l[len(ir):-2], 'rb')
-    f.outf.write(nf.read().decode('utf-8')) # Added decode for Python 3 compatibility
+    f.outf.write(nf.read())
     nf.close()
   elif l.startswith(i):
     f.pushfile(l[len(i):-2])
   elif l.startswith(ib):
-    # Process the bib file and inject the HTML directly
+    # Process bib file, compile into dynamic jemdoc strings, and inject them into the open virtual file buffer
     bib_filename = l[len(ib):-2]
-    bib_html = format_bib(bib_filename)
-    f.outf.write(bib_html)
+    generated_jemdoc = format_bib_categorized(bib_filename, f)
+    
+    # We turn the generated string into a byte stream so the jemdoc engine can process it mid-flight
+    f.pushfile_string(generated_jemdoc)
   else:
     return False
 
