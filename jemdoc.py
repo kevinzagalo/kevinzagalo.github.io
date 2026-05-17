@@ -282,6 +282,77 @@ class JandalError(Exception):
 class NoEqSupport(Exception):
   pass
 
+def format_bib(filename):
+  """Parses a basic .bib file and returns an HTML unordered list."""
+  import re
+  try:
+    with open(filename, 'r', encoding='utf-8') as bibf:
+      content = bibf.read()
+  except IOError:
+    return "<p><b>Error: Could not open %s</b></p>\n" % filename
+
+  html = '<ul class="publications">\n'
+  entries_raw = content.split('@')[1:] # Split by entries
+  
+  for entry in entries_raw:
+    entry = entry.strip()
+    if not entry: continue
+    
+    # Split past the cite key: e.g., phdthesis{key, body...
+    body_split = entry.split(',', 1)
+    if len(body_split) < 2: continue
+    
+    # Identify what type of entry this is (article, phdthesis, inproceedings, etc.)
+    entry_type = body_split[0].split('{')[0].strip().lower()
+    body = body_split[1]
+    
+    # Simpler, more forgiving regex to extract key={value} or key="value"
+    fields = {}
+    matches = re.finditer(r'([a-zA-Z0-9_]+)\s*=\s*[\{"](.*?)[\}"]', body, re.DOTALL)
+    for m in matches:
+      # Clean up LaTeX brackets and newlines from the values
+      clean_val = m.group(2).replace('{', '').replace('}', '').replace('\n', ' ').strip()
+      fields[m.group(1).lower()] = clean_val
+        
+    author = fields.get('author', '').replace(' and ', ', ')
+    title = fields.get('title', '')
+    
+    # Expanded fallback list to cover journals, conferences, theses, and tech reports
+    venue = fields.get('journal', 
+            fields.get('booktitle', 
+            fields.get('school', 
+            fields.get('institution', 
+            fields.get('publisher', 
+            fields.get('howpublished', ''))))))
+            
+    year = fields.get('year', '')
+    url = fields.get('url', fields.get('pdf', ''))
+    
+    html += '<li style="margin-bottom: 0.8em;">'
+    if author: html += "%s. " % author
+    
+    if title:
+      if url:
+        html += '<a href="%s" target="_blank"><b>&ldquo;%s&rdquo;</b></a>. ' % (url, title)
+      else:
+        html += '<b>&ldquo;%s&rdquo;</b>. ' % title
+        
+    # Formatting rules based on the type of entry
+    if entry_type == 'phdthesis' or entry_type == 'mastersthesis':
+      type_label = "PhD thesis" if entry_type == 'phdthesis' else "Master's thesis"
+      if venue:
+        html += "%s, <i>%s</i>, " % (type_label, venue)
+      else:
+        html += "%s, " % type_label
+    else:
+      if venue: html += "<i>%s</i>, " % venue
+        
+    if year: html += "%s." % year
+    html += "</li>\n"
+    
+  html += "</ul>\n"
+  return html
+  
 def raisejandal(msg, line=0):
   if line == 0:
     s = "%s" % msg
@@ -413,12 +484,19 @@ def pc(f, ditchcomments=True):
 def doincludes(f, l):
   ir = 'includeraw{'
   i = 'include{'
+  ib = 'includebib{'
+  
   if l.startswith(ir):
     nf = open(l[len(ir):-2], 'rb')
-    f.outf.write(nf.read())
+    f.outf.write(nf.read().decode('utf-8')) # Added decode for Python 3 compatibility
     nf.close()
   elif l.startswith(i):
     f.pushfile(l[len(i):-2])
+  elif l.startswith(ib):
+    # Process the bib file and inject the HTML directly
+    bib_filename = l[len(ib):-2]
+    bib_html = format_bib(bib_filename)
+    f.outf.write(bib_html)
   else:
     return False
 
