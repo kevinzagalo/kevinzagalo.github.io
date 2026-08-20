@@ -462,3 +462,16 @@ div#footer a {
 #layout-content h3 ~ h2 ~ ol {
     margin-left: 35px;
 }
+
+/* --- Smartphone Layout Adjustments --- */
+@media screen and (max-width: 768px) {
+    #layout-menu {
+        display: none;
+    }
+    
+    #layout-content {
+        margin-left: 0;
+        width: 100%;
+        padding: 15px; 
+    }
+}
