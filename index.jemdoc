@@ -1,5 +1,5 @@
 # jemdoc: menu{MENU}{index.html}, addcss{jemdoc.css}
-= Kevin Camille Zagalo
+= K. C. Zagalo
 
 
 Assistant professor in the telecommunication department of INSA Lyon. I do my research in the [https://team.inria.fr/maracas/ Maracas] team of Inria Lyon hosted in the [https://www.citi-lab.fr/ CITI] laboratory. I currently work on latency-focused analyses of random wireless networks based on stochastic geometry approaches. I also host the [https://team.inria.fr/maracas/seminar/ MARACAS seminar].
@@ -30,6 +30,12 @@ Bat. Hedy Lamarr, 6 avenue des Arts\n
 
 
 = Teaching
+
+- Advanced digital communications, INSA Lyon, Fall 2026.
+- Network performance evaluation, INSA Lyon, Fall 2026.
+- Bayesian decision theory, INSA Lyon, Spring 2027. 
+- Digital communications, INSA Lyon, Spring 2027.
+- Radio access networks, INSA Lyon, Spring 2027.
 
 
 == Past lectures:
