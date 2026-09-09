@@ -414,7 +414,7 @@ def format_bib_categorized(filename, f_control):
     if title: item_str += "*%s*. " % title
         
     if entry_type in ('phdthesis', 'mastersthesis'):
-      type_label = "PhD thesis" if entry_type == 'phdthesis' else "Ms thesis"
+      type_label = "PhD thesis" if entry_type == 'phdthesis' else "MSc thesis"
       if venue:
         item_str += "%s, /%s/, " % (type_label, venue)
       else:
