@@ -287,195 +287,205 @@ class NoEqSupport(Exception):
   pass
 
 def format_bib_categorized(filename, f_control):
-  """Parses a .bib file robustly, managing NNT/DOI priority, unlinked titles, and fixed arXiv formats."""
-  import re
-  try:
-    with open(filename, 'r', encoding='utf-8') as bibf:
-      content = bibf.read()
-  except IOError:
-    return "=== Error\nCould not open %s\n" % filename
+    """Parses a .bib file robustly, managing NNT/DOI priority, unlinked titles, and fixed arXiv formats."""
+    import re
+    try:
+        with open(filename, 'r', encoding='utf-8') as bibf:
+            content = bibf.read()
+    except IOError:
+        return "=== Error\nCould not open %s\n" % filename
 
-  # Buckets for each section
-  journals = []
-  conferences = []
-  preprints = []
-  theses = []
+    # Buckets for each section. We will store tuples: (sort_year, formatted_string)
+    journals = []
+    conferences = []
+    preprints = []
+    theses = []
 
-  # Locate all occurrences of @type
-  entry_starts = list(re.finditer(r'@([a-zA-Z]+)', content))
-  
-  for start_match in entry_starts:
-    entry_type = start_match.group(1).strip().lower()
+    # Locate all occurrences of @type
+    entry_starts = list(re.finditer(r'@([a-zA-Z]+)', content))
     
-    search_start = start_match.end()
-    brace_start = content.find('{', search_start)
-    if brace_start == -1: continue
-    
-    # Balanced bracket extraction for the entry body
-    brace_count = 0
-    body = ""
-    for idx in range(brace_start, len(content)):
-      char = content[idx]
-      if char == '{':
-        brace_count += 1
-      elif char == '}':
-        brace_count -= 1
+    for start_match in entry_starts:
+        entry_type = start_match.group(1).strip().lower()
         
-      if brace_count == 0:
-        body = content[brace_start+1:idx]
-        break
-    
-    if not body: continue
+        search_start = start_match.end()
+        brace_start = content.find('{', search_start)
+        if brace_start == -1: continue
+        
+        # Balanced bracket extraction for the entry body
+        brace_count = 0
+        body = ""
+        for idx in range(brace_start, len(content)):
+            char = content[idx]
+            if char == '{':
+                brace_count += 1
+            elif char == '}':
+                brace_count -= 1
+                
+            if brace_count == 0:
+                body = content[brace_start+1:idx]
+                break
+        
+        if not body: continue
 
-    # Parse key-value pairs cleanly out of the body block
-    fields = {}
-    i = 0
-    # Skip past the citation key
-    first_comma = body.find(',')
-    if first_comma != -1:
-      i = first_comma + 1
-    
-    while i < len(body):
-      while i < len(body) and (body[i].isspace() or body[i] == ','):
-        i += 1
-      if i >= len(body): break
-      
-      equal_sign = body.find('=', i)
-      if equal_sign == -1: break
-      
-      key_name = body[i:equal_sign].strip().lower()
-      i = equal_sign + 1
-      
-      while i < len(body) and body[i].isspace():
-        i += 1
-      if i >= len(body): break
-      
-      val_chars = []
-      if body[i] == '{':
-        v_brace = 1
-        i += 1
+        # Parse key-value pairs cleanly out of the body block
+        fields = {}
+        i = 0
+        # Skip past the citation key
+        first_comma = body.find(',')
+        if first_comma != -1:
+            i = first_comma + 1
+        
         while i < len(body):
-          if body[i] == '{': v_brace += 1
-          elif body[i] == '}': v_brace -= 1
-          
-          if v_brace == 0:
-            i += 1
-            break
-          val_chars.append(body[i])
-          i += 1
-      elif body[i] == '"':
-        i += 1
-        while i < len(body):
-          if body[i] == '"':
-            i += 1
-            break
-          val_chars.append(body[i])
-          i += 1
-      else:
-        while i < len(body) and body[i] != ',' and not body[i].isspace():
-          val_chars.append(body[i])
-          i += 1
-          
-      fields[key_name] = "".join(val_chars).replace('\n', ' ').strip()
+            while i < len(body) and (body[i].isspace() or body[i] == ','):
+                i += 1
+            if i >= len(body): break
+            
+            equal_sign = body.find('=', i)
+            if equal_sign == -1: break
+            
+            key_name = body[i:equal_sign].strip().lower()
+            i = equal_sign + 1
+            
+            while i < len(body) and body[i].isspace():
+                i += 1
+            if i >= len(body): break
+            
+            val_chars = []
+            if body[i] == '{':
+                v_brace = 1
+                i += 1
+                while i < len(body):
+                    if body[i] == '{': v_brace += 1
+                    elif body[i] == '}': v_brace -= 1
+                    
+                    if v_brace == 0:
+                        i += 1
+                        break
+                    val_chars.append(body[i])
+                    i += 1
+            elif body[i] == '"':
+                i += 1
+                while i < len(body):
+                    if body[i] == '"':
+                        i += 1
+                        break
+                    val_chars.append(body[i])
+                    i += 1
+            else:
+                while i < len(body) and body[i] != ',' and not body[i].isspace():
+                    val_chars.append(body[i])
+                    i += 1
+                    
+            fields[key_name] = "".join(val_chars).replace('\n', ' ').strip()
 
-    # Field assembly mapping
-    author = fields.get('author', '').replace(' and ', ', ')
-    title = fields.get('title', '')
-    venue = fields.get('journal', fields.get('booktitle', fields.get('school', fields.get('institution', fields.get('publisher', fields.get('howpublished', ''))))))
-    year = fields.get('year', '')
-    url = fields.get('url', fields.get('pdf', ''))
-    doi = fields.get('doi', '')
-    eprint = fields.get('eprint', '')
-    note = fields.get('note', '')
+        # Field assembly mapping
+        author = fields.get('author', '').replace(' and ', ', ')
+        title = fields.get('title', '')
+        venue = fields.get('journal', fields.get('booktitle', fields.get('school', fields.get('institution', fields.get('publisher', fields.get('howpublished', ''))))))
+        year = fields.get('year', '')
+        url = fields.get('url', fields.get('pdf', ''))
+        doi = fields.get('doi', '')
+        eprint = fields.get('eprint', '')
+        note = fields.get('note', '')
 
-    if not title and not author:
-      continue
+        if not title and not author:
+            continue
 
-    # Detect if this entry is an arXiv preprint
-    is_arxiv = False
-    arxiv_id = ""
-    
-    if eprint:
-      is_arxiv = True
-      arxiv_id = eprint
-    elif venue and 'arxiv' in venue.lower():
-      is_arxiv = True
-      match_id = re.search(r'(?:arxiv:\s*|abs/|/)?(\d{4}\.\d{4,5}|[a-z-]+/\d{7})', venue, re.IGNORECASE)
-      if match_id:
-        arxiv_id = match_id.group(1)
-      elif url and 'arxiv.org' in url:
-        match_url = re.search(r'abs/(\d{4}\.\d{4,5}|[a-z-]+/\d{7})', url)
-        if match_url:
-          arxiv_id = match_url.group(1)
+        # --- EXTRACT YEAR FOR SORTING ---
+        sort_year = 0
+        match_year = re.search(r'\d{4}', year)
+        if match_year:
+            sort_year = int(match_year.group())
+        # --------------------------------
 
-    # Build clean jemdoc formatting string (TITLES ARE NOW UNLINKED)
-    item_str = "- "
-    if author: item_str += "%s. " % author
-    if title: item_str += "*%s*. " % title
+        # Detect if this entry is an arXiv preprint
+        is_arxiv = False
+        arxiv_id = ""
         
-    if entry_type in ('phdthesis', 'mastersthesis'):
-      type_label = "PhD thesis" if entry_type == 'phdthesis' else "MSc thesis"
-      if venue:
-        item_str += "%s, /%s/, " % (type_label, venue)
-      else:
-        item_str += "%s, " % type_label
-    else:
-      if is_arxiv:
-        pass 
-      elif venue: 
-        item_str += "/%s/, " % venue
-        
-    if year: item_str += "%s." % year
+        if eprint:
+            is_arxiv = True
+            arxiv_id = eprint
+        elif venue and 'arxiv' in venue.lower():
+            is_arxiv = True
+            match_id = re.search(r'(?:arxiv:\s*|abs/|/)?(\d{4}\.\d{4,5}|[a-z-]+/\d{7})', venue, re.IGNORECASE)
+            if match_id:
+                arxiv_id = match_id.group(1)
+            elif url and 'arxiv.org' in url:
+                match_url = re.search(r'abs/(\d{4}\.\d{4,5}|[a-z-]+/\d{7})', url)
+                if match_url:
+                    arxiv_id = match_url.group(1)
 
-    # Append formatted arXiv link if present (FIXED SYNTAX)
-    if is_arxiv and arxiv_id:
-      arxiv_url = "https://arxiv.org/abs/%s" % arxiv_id
-      item_str += " [https://arxiv.org/abs/%s arXiv:%s]" % (arxiv_id, arxiv_id)
-
-    # Handle NNT vs DOI Prioritization for Thesis entries
-    if entry_type in ('phdthesis', 'mastersthesis') and note and ('nnt' in note.lower() or any(char.isdigit() for char in note)):
-      # Clean up string to isolate the number identifier
-      nnt_clean = note.replace('NNT:', '').replace('nnt:', '').replace('NNT', '').strip()
-      nnt_url = "https://theses.fr/%s" % nnt_clean
-      item_str += " [https://theses.fr/%s NNT: %s]" % (nnt_clean, nnt_clean)
-    else:
-      # Append standard DOI link if present or if fallback is active
-      if doi:
-        if doi.startswith('http://') or doi.startswith('https://'):
-          doi_url = doi
-          doi_display = doi.split('doi.org/')[-1]
+        # Build clean jemdoc formatting string (TITLES ARE NOW UNLINKED)
+        item_str = "- "
+        if author: item_str += "%s. " % author
+        if title: item_str += "*%s*. " % title
+                
+        if entry_type in ('phdthesis', 'mastersthesis'):
+            type_label = "PhD thesis" if entry_type == 'phdthesis' else "MSc thesis"
+            if venue:
+                item_str += "%s, /%s/, " % (type_label, venue)
+            else:
+                item_str += "%s, " % type_label
         else:
-          doi_url = "https://doi.org/%s" % doi
-          doi_display = doi
-        item_str += " DOI: [%s %s]" % (doi_url, doi_display)
+            if is_arxiv:
+                pass 
+            elif venue: 
+                item_str += "/%s/, " % venue
+                
+        if year: item_str += "%s." % year
 
-    # Categorize items explicitly
-    if is_arxiv and entry_type != 'article':
-      preprints.append(item_str)
-    elif entry_type == 'article':
-      if is_arxiv and not fields.get('volume', ''):
-        preprints.append(item_str)
-      else:
-        journals.append(item_str)
-    elif entry_type in ('inproceedings', 'conference', 'proceedings'):
-      conferences.append(item_str)
-    elif entry_type in ('phdthesis', 'mastersthesis'):
-      theses.append(item_str)
-    else:
-      preprints.append(item_str)
+        # Append formatted arXiv link if present (FIXED SYNTAX)
+        if is_arxiv and arxiv_id:
+            item_str += " [https://arxiv.org/abs/%s arXiv:%s]" % (arxiv_id, arxiv_id)
 
-  # Assemble the separated jemdoc sections using '=== ' levels
-  output_jemdoc = "\n\n"
-  if journals:
-    output_jemdoc += "== Journals\n" + "\n".join(journals) + "\n\n"
-  if conferences:
-    output_jemdoc += "== Conferences\n" + "\n".join(conferences) + "\n\n"
-  if preprints:
-    output_jemdoc += "== Preprints\n" + "\n".join(preprints) + "\n\n"
-  if theses:
-    output_jemdoc += "== Theses\n" + "\n".join(theses) + "\n\n"
+        # Handle NNT vs DOI Prioritization for Thesis entries
+        if entry_type in ('phdthesis', 'mastersthesis') and note and ('nnt' in note.lower() or any(char.isdigit() for char in note)):
+            # Clean up string to isolate the number identifier
+            nnt_clean = note.replace('NNT:', '').replace('nnt:', '').replace('NNT', '').strip()
+            item_str += " [https://theses.fr/%s NNT: %s]" % (nnt_clean, nnt_clean)
+        else:
+            # Append standard DOI link if present or if fallback is active
+            if doi:
+                if doi.startswith('http://') or doi.startswith('https://'):
+                    doi_url = doi
+                    doi_display = doi.split('doi.org/')[-1]
+                else:
+                    doi_url = "https://doi.org/%s" % doi
+                    doi_display = doi
+                item_str += " DOI: [%s %s]" % (doi_url, doi_display)
 
-  return output_jemdoc
+        # Categorize items explicitly and store as tuple (sort_year, string)
+        if is_arxiv and entry_type != 'article':
+            preprints.append((sort_year, item_str))
+        elif entry_type == 'article':
+            if is_arxiv and not fields.get('volume', ''):
+                preprints.append((sort_year, item_str))
+            else:
+                journals.append((sort_year, item_str))
+        elif entry_type in ('inproceedings', 'conference', 'proceedings'):
+            conferences.append((sort_year, item_str))
+        elif entry_type in ('phdthesis', 'mastersthesis'):
+            theses.append((sort_year, item_str))
+        else:
+            preprints.append((sort_year, item_str))
+
+    # Helper function to sort by year descending and extract the strings
+    def sort_and_extract(item_list):
+        item_list.sort(key=lambda x: x[0], reverse=True)
+        return [item[1] for item in item_list]
+
+    # Assemble the separated jemdoc sections using '=== ' levels
+    output_jemdoc = "\n\n"
+    if journals:
+        output_jemdoc += "== Journals\n" + "\n".join(sort_and_extract(journals)) + "\n\n"
+    if conferences:
+        output_jemdoc += "== Conferences\n" + "\n".join(sort_and_extract(conferences)) + "\n\n"
+    if preprints:
+        output_jemdoc += "== Preprints\n" + "\n".join(sort_and_extract(preprints)) + "\n\n"
+    if theses:
+        output_jemdoc += "== Theses\n" + "\n".join(sort_and_extract(theses)) + "\n\n"
+
+    return output_jemdoc
 
 def raisejandal(msg, line=0):
   if line == 0:
