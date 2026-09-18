@@ -263,7 +263,7 @@ def standardconf():
   [footerend]
   </div>
   </div>
-
+  
   [lastupdated]
   Page generated |, by a slightly modified version of <a href="https://github.com/jem/jemdoc">jemdoc</a>.
 
@@ -528,7 +528,6 @@ def format_bib_categorized(filename, f_control):
         eprint_type = fields.get('eprinttype', fields.get('archiveprefix', ''))
         note = fields.get('note', '')
 
-
         if not title and not author:
             continue
 
@@ -538,25 +537,34 @@ def format_bib_categorized(filename, f_control):
             sort_year = int(match_year.group())
 
         # HAL identifier: support common field names used by HAL/BibTeX exports,
-        # then fall back to a HAL URL if present.
+        # then fall back to a HAL URL if present.  Keep a versioned identifier
+        # for the target URL when available (e.g. hal-05754349v1), while the
+        # visible label omits the version suffix (e.g. ⟨hal-05754349⟩).
         hal_id = ''
+        hal_url_id = ''
         for hal_key in ('hal_id', 'halid', 'hal-id', 'hal'):
             if fields.get(hal_key):
                 hal_id = normalize_hal_id(fields[hal_key])
                 break
-        if not hal_id:
-            hal_url = fields.get('hal_url', fields.get('halurl', ''))
-            candidate_url = hal_url or (url if re.search(r'https?://(?:hal\.|[^/]*\.hal\.)|hal\.science|archives-ouvertes\.fr', url, re.IGNORECASE) else '')
-            if candidate_url:
-                m = re.search(
-                    r'https?://(?:[^/]+)/(?:[^/]+/)?((?:hal|tel|inria|cea|ensl|pasteur|cnrs)-[A-Za-z0-9._-]+)',
-                    candidate_url,
-                    re.IGNORECASE,
-                )
-                if m:
-                    hal_id = m.group(1)
+
+        hal_url = fields.get('hal_url', fields.get('halurl', ''))
+        candidate_url = hal_url or (url if re.search(r'https?://(?:hal\.|[^/]*\.hal\.)|hal\.science|archives-ouvertes\.fr', url, re.IGNORECASE) else '')
+        if candidate_url:
+            m = re.search(
+                r'https?://(?:[^/]+)/(?:[^/]+/)?((?:hal|tel|inria|cea|ensl|pasteur|cnrs)-[A-Za-z0-9._-]+)',
+                candidate_url,
+                re.IGNORECASE,
+            )
+            if m:
+                hal_url_id = m.group(1)
+                if not hal_id:
+                    hal_id = hal_url_id
+
         if not hal_id and eprint and 'hal' in eprint_type.lower():
             hal_id = normalize_hal_id(eprint)
+
+        hal_link_id = hal_url_id or hal_id
+        hal_display_id = re.sub(r'v\d+$', '', hal_id or hal_link_id, flags=re.IGNORECASE)
 
         # arXiv identifier: accept explicit arXiv fields, eprint metadata, venue,
         # or arXiv URLs. Do not assume every generic eprint is arXiv.
@@ -605,25 +613,34 @@ def format_bib_categorized(filename, f_control):
 
         # Append all available publication identifiers. These are independent:
         # an entry may legitimately expose HAL + arXiv + DOI simultaneously.
-        if hal_id:
-            item_str += ' [https://hal.science/%s HAL:%s]' % (hal_id, hal_id)
+        if hal_link_id:
+            item_str += ' [https://hal.science/%s ⟨%s⟩]' % (hal_link_id, hal_display_id)
 
         if arxiv_id:
             item_str += ' [https://arxiv.org/abs/%s arXiv:%s]' % (arxiv_id, arxiv_id)
 
-        # Keep NNT handling for theses, but do not suppress a DOI if both exist.
-        if entry_type in ('phdthesis', 'mastersthesis') and note and (
-            'nnt' in note.lower() or any(char.isdigit() for char in note)
-        ):
-            nnt_match = re.search(r'(?:NNT\s*:?\s*)?([0-9]{4}[A-Za-z0-9_-]+)', note, re.IGNORECASE)
-            if nnt_match:
-                nnt_clean = nnt_match.group(1)
-            else:
-                nnt_clean = note.replace('NNT:', '').replace('nnt:', '').replace('NNT', '').strip()
+        # Theses are the exception: display the NNT instead of the DOI.
+        # Accept an explicit NNT field when present, otherwise recover it from note.
+        if entry_type in ('phdthesis', 'mastersthesis'):
+            nnt_source = fields.get('nnt', fields.get('nnt_id', fields.get('nntid', '')))
+            if not nnt_source:
+                nnt_source = note
+
+            nnt_clean = ''
+            if nnt_source:
+                nnt_source = latex_to_unicode(nnt_source)
+                nnt_match = re.search(
+                    r'(?:NNT\s*:?\s*)?([0-9]{4}[A-Za-z0-9._-]+)',
+                    nnt_source,
+                    re.IGNORECASE,
+                )
+                if nnt_match:
+                    nnt_clean = nnt_match.group(1)
+
             if nnt_clean:
                 item_str += ' [https://theses.fr/%s NNT: %s]' % (nnt_clean, nnt_clean)
 
-        if doi:
+        elif doi:
             doi_url = 'https://doi.org/%s' % doi
             item_str += ' DOI: [%s %s]' % (doi_url, doi)
 
