@@ -287,174 +287,345 @@ class NoEqSupport(Exception):
   pass
 
 def format_bib_categorized(filename, f_control):
-    """Parses a .bib file robustly, managing NNT/DOI priority, unlinked titles, and fixed arXiv formats."""
+    """Parse a .bib file and render categorized publication lists for jemdoc.
+
+    BibTeX grouping braces are used for parsing/protection only and are not
+    emitted in the visible text. Common LaTeX accents are converted to Unicode.
+    HAL, arXiv and DOI identifiers are rendered as links when available.
+    """
     import re
+    import unicodedata
+
+    def latex_to_unicode(value):
+        """Convert common BibTeX/LaTeX text constructs to displayable Unicode."""
+        if not value:
+            return ''
+
+        value = value.replace('\n', ' ').replace('\r', ' ')
+
+        combining = {
+            '"': '\u0308',  # diaeresis
+            "'": '\u0301',  # acute
+            '`': '\u0300',  # grave
+            '^': '\u0302',  # circumflex
+            '~': '\u0303',  # tilde
+            '=': '\u0304',  # macron
+            '.': '\u0307',  # dot above
+            'u': '\u0306',  # breve
+            'v': '\u030c',  # caron
+            'H': '\u030b',  # double acute
+            'c': '\u0327',  # cedilla
+            'k': '\u0328',  # ogonek
+            'r': '\u030a',  # ring above
+        }
+
+        def accent_repl(match):
+            accent = match.group(1)
+            letter = match.group(2)
+            return unicodedata.normalize('NFC', letter + combining[accent])
+
+        # Standard forms: \\"i, \\"{i}, {\\"i}, {\\"{i}}, \\c{c}, ...
+        accent_pattern = re.compile(
+            r'\\(["\'`\^~=\.uvHckr])\s*\{?\\?([A-Za-z])\}?'
+        )
+        previous = None
+        while previous != value:
+            previous = value
+            value = accent_pattern.sub(accent_repl, value)
+
+        # Also accept the frequently encountered malformed/legacy form {"i}
+        # where the backslash before the accent marker is absent.
+        malformed_accent_pattern = re.compile(r'\{(["\'`\^~])\s*([A-Za-z])\}')
+        value = malformed_accent_pattern.sub(accent_repl, value)
+
+        # Common LaTeX letter commands used in names and titles.
+        letter_commands = {
+            r'\\ae': 'æ', r'\\AE': 'Æ',
+            r'\\oe': 'œ', r'\\OE': 'Œ',
+            r'\\aa': 'å', r'\\AA': 'Å',
+            r'\\o': 'ø', r'\\O': 'Ø',
+            r'\\l': 'ł', r'\\L': 'Ł',
+            r'\\ss': 'ß',
+            r'\\i': 'ı', r'\\j': 'ȷ',
+        }
+        for command, replacement in letter_commands.items():
+            value = re.sub(command + r'(?=\s|[{}]|$)', replacement, value)
+
+        # TeX escapes that should be displayed literally.
+        value = re.sub(r'\\([&%#$._])', r'\1', value)
+        value = value.replace('~', ' ')
+
+        # Remaining braces are BibTeX grouping/protection braces, not content.
+        value = value.replace('{', '').replace('}', '')
+
+        # Collapse whitespace introduced by formatting/group removal.
+        value = re.sub(r'\s+', ' ', value).strip()
+        return value
+
+    def normalize_arxiv_id(value):
+        value = latex_to_unicode(value).strip()
+        value = re.sub(r'^arxiv:\s*', '', value, flags=re.IGNORECASE)
+        m = re.search(
+            r'(\d{4}\.\d{4,5}(?:v\d+)?|[A-Za-z.-]+/\d{7}(?:v\d+)?)',
+            value,
+            re.IGNORECASE,
+        )
+        return m.group(1) if m else ''
+
+    def normalize_doi(value):
+        value = latex_to_unicode(value).strip()
+        value = re.sub(r'^doi:\s*', '', value, flags=re.IGNORECASE)
+        value = re.sub(r'^https?://(?:dx\.)?doi\.org/', '', value, flags=re.IGNORECASE)
+        return value.strip()
+
+    def normalize_hal_id(value):
+        value = latex_to_unicode(value).strip()
+        if not value:
+            return ''
+        value = re.sub(r'^https?://[^/]+/', '', value, flags=re.IGNORECASE)
+        value = value.strip('/')
+        # HAL URLs can contain extra path components; the identifier is first.
+        if '/' in value:
+            value = value.split('/', 1)[0]
+        return value
+
     try:
         with open(filename, 'r', encoding='utf-8') as bibf:
             content = bibf.read()
     except IOError:
         return "=== Error\nCould not open %s\n" % filename
 
-    # Buckets for each section. We will store tuples: (sort_year, formatted_string)
     journals = []
     conferences = []
     preprints = []
     theses = []
 
-    # Locate all occurrences of @type
+    # Locate all occurrences of @type. Entry bodies are then extracted with
+    # balanced braces so nested BibTeX groups are handled correctly.
     entry_starts = list(re.finditer(r'@([a-zA-Z]+)', content))
-    
+
     for start_match in entry_starts:
         entry_type = start_match.group(1).strip().lower()
-        
+
         search_start = start_match.end()
         brace_start = content.find('{', search_start)
-        if brace_start == -1: continue
-        
-        # Balanced bracket extraction for the entry body
+        if brace_start == -1:
+            continue
+
         brace_count = 0
-        body = ""
+        body = ''
         for idx in range(brace_start, len(content)):
             char = content[idx]
             if char == '{':
                 brace_count += 1
             elif char == '}':
                 brace_count -= 1
-                
-            if brace_count == 0:
-                body = content[brace_start+1:idx]
-                break
-        
-        if not body: continue
 
-        # Parse key-value pairs cleanly out of the body block
+            if brace_count == 0:
+                body = content[brace_start + 1:idx]
+                break
+
+        if not body:
+            continue
+
+        # Parse key/value pairs. Quoted values may contain protected groups and
+        # escaped quote accents (e.g. \\"i), so only an unescaped quote at brace
+        # depth zero terminates a quoted field.
         fields = {}
         i = 0
-        # Skip past the citation key
         first_comma = body.find(',')
         if first_comma != -1:
             i = first_comma + 1
-        
+
         while i < len(body):
             while i < len(body) and (body[i].isspace() or body[i] == ','):
                 i += 1
-            if i >= len(body): break
-            
+            if i >= len(body):
+                break
+
             equal_sign = body.find('=', i)
-            if equal_sign == -1: break
-            
+            if equal_sign == -1:
+                break
+
             key_name = body[i:equal_sign].strip().lower()
             i = equal_sign + 1
-            
+
             while i < len(body) and body[i].isspace():
                 i += 1
-            if i >= len(body): break
-            
+            if i >= len(body):
+                break
+
             val_chars = []
             if body[i] == '{':
-                v_brace = 1
+                value_brace_depth = 1
                 i += 1
                 while i < len(body):
-                    if body[i] == '{': v_brace += 1
-                    elif body[i] == '}': v_brace -= 1
-                    
-                    if v_brace == 0:
+                    char = body[i]
+                    if char == '{':
+                        value_brace_depth += 1
+                    elif char == '}':
+                        value_brace_depth -= 1
+
+                    if value_brace_depth == 0:
                         i += 1
                         break
-                    val_chars.append(body[i])
+
+                    val_chars.append(char)
                     i += 1
+
             elif body[i] == '"':
                 i += 1
+                quoted_brace_depth = 0
                 while i < len(body):
-                    if body[i] == '"':
-                        i += 1
-                        break
-                    val_chars.append(body[i])
+                    char = body[i]
+                    if char == '{':
+                        quoted_brace_depth += 1
+                    elif char == '}' and quoted_brace_depth > 0:
+                        quoted_brace_depth -= 1
+
+                    # Count preceding backslashes to distinguish an escaped
+                    # quote from the quote that ends the BibTeX field.
+                    if char == '"' and quoted_brace_depth == 0:
+                        backslashes = 0
+                        j = i - 1
+                        while j >= 0 and body[j] == '\\':
+                            backslashes += 1
+                            j -= 1
+                        if backslashes % 2 == 0:
+                            i += 1
+                            break
+
+                    val_chars.append(char)
                     i += 1
+
             else:
                 while i < len(body) and body[i] != ',' and not body[i].isspace():
                     val_chars.append(body[i])
                     i += 1
-                    
-            fields[key_name] = "".join(val_chars).replace('\n', ' ').strip()
 
-        # Field assembly mapping
+            fields[key_name] = latex_to_unicode(''.join(val_chars))
+
+        # Field assembly mapping.
         author = fields.get('author', '').replace(' and ', ', ')
         title = fields.get('title', '')
-        venue = fields.get('journal', fields.get('booktitle', fields.get('school', fields.get('institution', fields.get('publisher', fields.get('howpublished', ''))))))
+        venue = fields.get(
+            'journal',
+            fields.get(
+                'booktitle',
+                fields.get(
+                    'school',
+                    fields.get(
+                        'institution',
+                        fields.get('publisher', fields.get('howpublished', '')),
+                    ),
+                ),
+            ),
+        )
         year = fields.get('year', '')
         url = fields.get('url', fields.get('pdf', ''))
-        doi = fields.get('doi', '')
+        doi = normalize_doi(fields.get('doi', ''))
         eprint = fields.get('eprint', '')
+        eprint_type = fields.get('eprinttype', fields.get('archiveprefix', ''))
         note = fields.get('note', '')
 
         if not title and not author:
             continue
 
-        # --- EXTRACT YEAR FOR SORTING ---
         sort_year = 0
         match_year = re.search(r'\d{4}', year)
         if match_year:
             sort_year = int(match_year.group())
-        # --------------------------------
 
-        # Detect if this entry is an arXiv preprint
-        is_arxiv = False
-        arxiv_id = ""
-        
-        if eprint:
-            is_arxiv = True
-            arxiv_id = eprint
-        elif venue and 'arxiv' in venue.lower():
-            is_arxiv = True
-            match_id = re.search(r'(?:arxiv:\s*|abs/|/)?(\d{4}\.\d{4,5}|[a-z-]+/\d{7})', venue, re.IGNORECASE)
-            if match_id:
-                arxiv_id = match_id.group(1)
-            elif url and 'arxiv.org' in url:
-                match_url = re.search(r'abs/(\d{4}\.\d{4,5}|[a-z-]+/\d{7})', url)
-                if match_url:
-                    arxiv_id = match_url.group(1)
+        # HAL identifier: support common field names used by HAL/BibTeX exports,
+        # then fall back to a HAL URL if present.
+        hal_id = ''
+        for hal_key in ('hal_id', 'halid', 'hal-id', 'hal'):
+            if fields.get(hal_key):
+                hal_id = normalize_hal_id(fields[hal_key])
+                break
+        if not hal_id:
+            hal_url = fields.get('hal_url', fields.get('halurl', ''))
+            candidate_url = hal_url or (url if re.search(r'https?://(?:hal\.|[^/]*\.hal\.)|hal\.science|archives-ouvertes\.fr', url, re.IGNORECASE) else '')
+            if candidate_url:
+                m = re.search(
+                    r'https?://(?:[^/]+)/(?:[^/]+/)?((?:hal|tel|inria|cea|ensl|pasteur|cnrs)-[A-Za-z0-9._-]+)',
+                    candidate_url,
+                    re.IGNORECASE,
+                )
+                if m:
+                    hal_id = m.group(1)
+        if not hal_id and eprint and 'hal' in eprint_type.lower():
+            hal_id = normalize_hal_id(eprint)
 
-        # Build clean jemdoc formatting string (TITLES ARE NOW UNLINKED)
-        item_str = "- "
-        if author: item_str += "%s. " % author
-        if title: item_str += "*%s*. " % title
-                
+        # arXiv identifier: accept explicit arXiv fields, eprint metadata, venue,
+        # or arXiv URLs. Do not assume every generic eprint is arXiv.
+        arxiv_id = ''
+        for arxiv_key in ('arxiv', 'arxiv_id', 'arxivid'):
+            if fields.get(arxiv_key):
+                arxiv_id = normalize_arxiv_id(fields[arxiv_key])
+                if arxiv_id:
+                    break
+
+        if not arxiv_id and eprint:
+            looks_arxiv = (
+                'arxiv' in eprint_type.lower()
+                or bool(re.fullmatch(r'(?:arxiv:\s*)?(?:\d{4}\.\d{4,5}(?:v\d+)?|[A-Za-z.-]+/\d{7}(?:v\d+)?)', eprint, re.IGNORECASE))
+            )
+            if looks_arxiv:
+                arxiv_id = normalize_arxiv_id(eprint)
+
+        if not arxiv_id and venue and 'arxiv' in venue.lower():
+            arxiv_id = normalize_arxiv_id(venue)
+        if not arxiv_id and url and 'arxiv.org' in url.lower():
+            arxiv_id = normalize_arxiv_id(url)
+
+        is_arxiv = bool(arxiv_id)
+
+        item_str = '- '
+        if author:
+            item_str += '%s. ' % author
+        if title:
+            item_str += '*%s*. ' % title
+
         if entry_type in ('phdthesis', 'mastersthesis'):
-            type_label = "PhD thesis" if entry_type == 'phdthesis' else "MSc thesis"
+            type_label = 'PhD thesis' if entry_type == 'phdthesis' else 'MSc thesis'
             if venue:
-                item_str += "%s, /%s/, " % (type_label, venue)
+                item_str += '%s, /%s/, ' % (type_label, venue)
             else:
-                item_str += "%s, " % type_label
+                item_str += '%s, ' % type_label
         else:
             if is_arxiv:
-                pass 
-            elif venue: 
-                item_str += "/%s/, " % venue
-                
-        if year: item_str += "%s." % year
+                pass
+            elif venue:
+                item_str += '/%s/, ' % venue
 
-        # Append formatted arXiv link if present (FIXED SYNTAX)
-        if is_arxiv and arxiv_id:
-            item_str += " [https://arxiv.org/abs/%s arXiv:%s]" % (arxiv_id, arxiv_id)
+        if year:
+            item_str += '%s.' % year
 
-        # Handle NNT vs DOI Prioritization for Thesis entries
-        if entry_type in ('phdthesis', 'mastersthesis') and note and ('nnt' in note.lower() or any(char.isdigit() for char in note)):
-            # Clean up string to isolate the number identifier
-            nnt_clean = note.replace('NNT:', '').replace('nnt:', '').replace('NNT', '').strip()
-            item_str += " [https://theses.fr/%s NNT: %s]" % (nnt_clean, nnt_clean)
-        else:
-            # Append standard DOI link if present or if fallback is active
-            if doi:
-                if doi.startswith('http://') or doi.startswith('https://'):
-                    doi_url = doi
-                    doi_display = doi.split('doi.org/')[-1]
-                else:
-                    doi_url = "https://doi.org/%s" % doi
-                    doi_display = doi
-                item_str += " DOI: [%s %s]" % (doi_url, doi_display)
+        # Append all available publication identifiers. These are independent:
+        # an entry may legitimately expose HAL + arXiv + DOI simultaneously.
+        if hal_id:
+            item_str += ' [https://hal.science/%s HAL:%s]' % (hal_id, hal_id)
 
-        # Categorize items explicitly and store as tuple (sort_year, string)
+        if arxiv_id:
+            item_str += ' [https://arxiv.org/abs/%s arXiv:%s]' % (arxiv_id, arxiv_id)
+
+        # Keep NNT handling for theses, but do not suppress a DOI if both exist.
+        if entry_type in ('phdthesis', 'mastersthesis') and note and (
+            'nnt' in note.lower() or any(char.isdigit() for char in note)
+        ):
+            nnt_match = re.search(r'(?:NNT\s*:?\s*)?([0-9]{4}[A-Za-z0-9_-]+)', note, re.IGNORECASE)
+            if nnt_match:
+                nnt_clean = nnt_match.group(1)
+            else:
+                nnt_clean = note.replace('NNT:', '').replace('nnt:', '').replace('NNT', '').strip()
+            if nnt_clean:
+                item_str += ' [https://theses.fr/%s NNT: %s]' % (nnt_clean, nnt_clean)
+
+        if doi:
+            doi_url = 'https://doi.org/%s' % doi
+            item_str += ' DOI: [%s %s]' % (doi_url, doi)
+
         if is_arxiv and entry_type != 'article':
             preprints.append((sort_year, item_str))
         elif entry_type == 'article':
@@ -469,21 +640,19 @@ def format_bib_categorized(filename, f_control):
         else:
             preprints.append((sort_year, item_str))
 
-    # Helper function to sort by year descending and extract the strings
     def sort_and_extract(item_list):
         item_list.sort(key=lambda x: x[0], reverse=True)
         return [item[1] for item in item_list]
 
-    # Assemble the separated jemdoc sections using '=== ' levels
-    output_jemdoc = "\n\n"
+    output_jemdoc = '\n\n'
     if journals:
-        output_jemdoc += "== Journals\n" + "\n".join(sort_and_extract(journals)) + "\n\n"
+        output_jemdoc += '== Journals\n' + '\n'.join(sort_and_extract(journals)) + '\n\n'
     if conferences:
-        output_jemdoc += "== Conferences\n" + "\n".join(sort_and_extract(conferences)) + "\n\n"
+        output_jemdoc += '== Conferences\n' + '\n'.join(sort_and_extract(conferences)) + '\n\n'
     if preprints:
-        output_jemdoc += "== Preprints\n" + "\n".join(sort_and_extract(preprints)) + "\n\n"
+        output_jemdoc += '== Preprints\n' + '\n'.join(sort_and_extract(preprints)) + '\n\n'
     if theses:
-        output_jemdoc += "== Theses\n" + "\n".join(sort_and_extract(theses)) + "\n\n"
+        output_jemdoc += '== Theses\n' + '\n'.join(sort_and_extract(theses)) + '\n\n'
 
     return output_jemdoc
 
