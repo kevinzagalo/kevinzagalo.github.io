@@ -638,7 +638,7 @@ def format_bib_categorized(filename, f_control):
                     nnt_clean = nnt_match.group(1)
 
             if nnt_clean:
-                item_str += ' [https://theses.fr/%s NNT: %s]' % (nnt_clean, nnt_clean)
+                item_str += ' NNT: [https://theses.fr/%s %s]' % (nnt_clean, nnt_clean)
 
         elif doi:
             doi_url = 'https://doi.org/%s' % doi
