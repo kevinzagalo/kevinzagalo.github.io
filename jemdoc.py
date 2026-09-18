@@ -611,12 +611,11 @@ def format_bib_categorized(filename, f_control):
         if year:
             item_str += '%s.' % year
 
-        # Append all available publication identifiers. These are independent:
-        # an entry may legitimately expose HAL + arXiv + DOI simultaneously.
+        # Prefer HAL over arXiv when both identifiers are available.
+        # DOI/NNT handling below remains independent.
         if hal_link_id:
             item_str += ' [https://hal.science/%s ⟨%s⟩]' % (hal_link_id, hal_display_id)
-
-        if arxiv_id:
+        elif arxiv_id:
             item_str += ' [https://arxiv.org/abs/%s arXiv:%s]' % (arxiv_id, arxiv_id)
 
         # Theses are the exception: display the NNT instead of the DOI.
