@@ -263,7 +263,7 @@ def standardconf():
   [footerend]
   </div>
   </div>
-  
+
   [lastupdated]
   Page generated |, by a slightly modified version of <a href="https://github.com/jem/jemdoc">jemdoc</a>.
 
@@ -527,6 +527,7 @@ def format_bib_categorized(filename, f_control):
         eprint = fields.get('eprint', '')
         eprint_type = fields.get('eprinttype', fields.get('archiveprefix', ''))
         note = fields.get('note', '')
+
 
         if not title and not author:
             continue
