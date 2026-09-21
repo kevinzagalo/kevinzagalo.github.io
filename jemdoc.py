@@ -506,7 +506,15 @@ def format_bib_categorized(filename, f_control):
             fields[key_name] = latex_to_unicode(''.join(val_chars))
 
         # Field assembly mapping.
-        author = fields.get('author', '').replace(' and ', ', ')
+        author_parts = [
+            part.strip() for part in fields.get('author', '').split(' and ') if part.strip()
+        ]
+        if len(author_parts) > 1:
+            author = ', '.join(author_parts[:-1]) + ' and ' + author_parts[-1]
+        elif author_parts:
+            author = author_parts[0]
+        else:
+            author = ''
         title = fields.get('title', '')
         venue = fields.get(
             'journal',
