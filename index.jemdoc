@@ -33,25 +33,25 @@ Bat. Hedy Lamarr, 6 avenue des Arts\n
 = Teaching
 
 - Advanced digital communications, INSA Lyon, Fall 2026.
-	.. Bayesian decision theory
-	.. Base band signals, channel and noise
-	.. Gaussian channel, selective channel and OFDM
-	.. Rayleigh channel, diversity and MIMO
+	-- Bayesian decision theory
+	-- Base band signals, channel and noise
+	-- Gaussian channel, selective channel and OFDM
+	-- Rayleigh channel, diversity and MIMO
 - Network performance evaluation, INSA Lyon, Fall 2026.
-	.. Discrete time Markov chains
-	.. Continuous time Markov chains
-	.. Queues
-	.. Networks of queues
+	-- Discrete time Markov chains
+	-- Continuous time Markov chains
+	-- Queues
+	-- Networks of queues
 - Bayesian decision theory, INSA Lyon, Spring 2027. 
-	.. Likelihood, a priori and a posteriori distributions
-	.. Likelihood ratio test
-	.. Neyman-Person theorem
-	.. Bayesian estimators
-	.. Fisher information and Cramer-Rao theorem
+	-- Likelihood, a priori and a posteriori distributions
+	-- Likelihood ratio test
+	-- Neyman-Person theorem
+	-- Bayesian estimators
+	-- Fisher information and Cramer-Rao theorem
 - Digital communications, INSA Lyon, Spring 2027.
-	.. Modulation, I/Q symbols
-	.. Compression, Huffman codes
-	.. Channel linear coding, cyclic codes, Reed-Solomon codes
+	-- Modulation, I/Q symbols
+	-- Compression, Huffman codes
+	-- Channel linear coding, cyclic codes, Reed-Solomon codes
 - Radio access networks, INSA Lyon, Spring 2027.
 
 
