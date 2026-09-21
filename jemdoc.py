@@ -149,7 +149,84 @@ def standardconf():
             -webkit-user-select: none;
             -ms-user-select: none;
          }
+         .bibtex-cite {
+             position: relative;
+             display: inline-block;
+             margin-left: 0.45em;
+             padding: 0.05em 0.4em;
+             border: 1px solid #aaa;
+             border-radius: 0.35em;
+             font-size: 0.72em;
+             line-height: 1.35;
+             font-family: monospace;
+             cursor: pointer;
+             vertical-align: baseline;
+             background: #f7f7f7;
+             color: #444;
+         }
+         .bibtex-cite:hover,
+         .bibtex-cite:focus {
+             background: #eeeeee;
+             outline: none;
+         }
+         .bibtex-tooltip {
+             display: none;
+             position: absolute;
+             left: 0;
+             top: calc(100% + 0.45em);
+             z-index: 1000;
+             width: max-content;
+             max-width: min(46rem, 80vw);
+             max-height: 24rem;
+             overflow: auto;
+             padding: 0.75em 0.9em;
+             border: 1px solid #aaa;
+             border-radius: 0.45em;
+             background: #fff;
+             box-shadow: 0 0.25em 0.8em rgba(0, 0, 0, 0.18);
+             color: #222;
+             font-size: 1.15em;
+             line-height: 1.35;
+             text-align: left;
+             cursor: text;
+             user-select: text;
+             -moz-user-select: text;
+             -webkit-user-select: text;
+         }
+         .bibtex-tooltip code {
+             display: block;
+             white-space: pre;
+             font-family: monospace;
+             user-select: text;
+             -moz-user-select: text;
+             -webkit-user-select: text;
+         }
+         .bibtex-cite:hover .bibtex-tooltip,
+         .bibtex-cite:focus .bibtex-tooltip,
+         .bibtex-cite:focus-within .bibtex-tooltip {
+             display: block;
+         }
       </style>
+  <script type="text/javascript">
+  document.addEventListener("DOMContentLoaded", function () {
+      var cites = document.querySelectorAll(".bibtex-cite[data-bibtex]");
+      for (var i = 0; i < cites.length; i++) {
+          var cite = cites[i];
+          var code = cite.querySelector(".bibtex-tooltip code");
+          if (!code) continue;
+          try {
+              var binary = window.atob(cite.getAttribute("data-bibtex"));
+              var bytes = new Uint8Array(binary.length);
+              for (var j = 0; j < binary.length; j++) {
+                  bytes[j] = binary.charCodeAt(j);
+              }
+              code.textContent = new TextDecoder("utf-8").decode(bytes);
+          } catch (err) {
+              code.textContent = "Unable to decode BibTeX entry.";
+          }
+      }
+  });
+  </script>
   <meta name="generator" content="jemdoc, see https://github.com/mengzili/jemdoc-python3" />
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
   
@@ -295,6 +372,7 @@ def format_bib_categorized(filename, f_control):
     """
     import re
     import unicodedata
+    import base64
 
     def latex_to_unicode(value):
         """Convert common BibTeX/LaTeX text constructs to displayable Unicode."""
@@ -414,6 +492,7 @@ def format_bib_categorized(filename, f_control):
 
         brace_count = 0
         body = ''
+        raw_bibtex = ''
         for idx in range(brace_start, len(content)):
             char = content[idx]
             if char == '{':
@@ -423,6 +502,8 @@ def format_bib_categorized(filename, f_control):
 
             if brace_count == 0:
                 body = content[brace_start + 1:idx]
+                # Keep the original BibTeX entry verbatim for the citation popup.
+                raw_bibtex = content[start_match.start():idx + 1].strip()
                 break
 
         if not body:
@@ -650,6 +731,19 @@ def format_bib_categorized(filename, f_control):
         elif doi:
             doi_url = 'https://doi.org/%s' % doi
             item_str += ' DOI: [%s %s]' % (doi_url, doi)
+
+        # Add a compact "cite" tag whose popup contains the exact BibTeX
+        # entry copied from the source .bib file.  The verbatim entry is stored
+        # as UTF-8 base64 in a data attribute and decoded in the browser. This
+        # avoids any collision between BibTeX braces/newlines and jemdoc syntax.
+        if raw_bibtex:
+            encoded_bibtex = base64.b64encode(raw_bibtex.encode('utf-8')).decode('ascii')
+            cite_html = (
+                '<span class="bibtex-cite" tabindex="0" data-bibtex="%s">cite'
+                '<span class="bibtex-tooltip" role="tooltip"><code></code></span>'
+                '</span>' % encoded_bibtex
+            )
+            item_str += ' {{%s}}' % cite_html
 
         if is_arxiv and entry_type != 'article':
             preprints.append((sort_year, item_str))
