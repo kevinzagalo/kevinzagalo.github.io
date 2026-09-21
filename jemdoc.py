@@ -440,6 +440,24 @@ def format_bib_categorized(filename, f_control):
         value = re.sub(r'\s+', ' ', value).strip()
         return value
 
+    def camel_case_title(value):
+        """Capitalize the first letter of each title word without
+        lowercasing the rest, so acronyms such as VLSF, MIMO or 6G are
+        preserved exactly as written in the BibTeX source.
+        """
+        if not value:
+            return ''
+
+        # Capitalize at the beginning of the title and after separators that
+        # naturally start a new word. Do not treat apostrophes as separators
+        # (e.g. "User's Guide", not "User'S Guide").
+        pattern = re.compile(r'(^|[\s\-–—/:;\(\[])'
+                             r'([^\W\d_])', re.UNICODE)
+        return pattern.sub(
+            lambda m: m.group(1) + m.group(2).upper(),
+            value,
+        )
+
     def normalize_arxiv_id(value):
         value = latex_to_unicode(value).strip()
         value = re.sub(r'^arxiv:\s*', '', value, flags=re.IGNORECASE)
@@ -596,7 +614,7 @@ def format_bib_categorized(filename, f_control):
             author = author_parts[0]
         else:
             author = ''
-        title = fields.get('title', '')
+        title = camel_case_title(fields.get('title', ''))
         venue = fields.get(
             'journal',
             fields.get(
