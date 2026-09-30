@@ -709,11 +709,8 @@ def format_bib_categorized(filename, f_control):
                 item_str += '%s, /%s/, ' % (type_label, venue)
             else:
                 item_str += '%s, ' % type_label
-        else:
-            if is_arxiv:
-                pass
-            elif venue:
-                item_str += '/%s/, ' % venue
+        elif venue:
+            item_str += '/%s/, ' % venue
 
         if year:
             item_str += '%s.' % year
