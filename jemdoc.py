@@ -763,15 +763,16 @@ def format_bib_categorized(filename, f_control):
             )
             item_str += ' {{%s}}' % cite_html
 
-        if is_arxiv and entry_type != 'article':
+        # Conference entries remain conferences even when an arXiv copy exists.
+        if entry_type in ('inproceeding', 'inproceedings', 'conference', 'proceedings'):
+            conferences.append((sort_year, item_str))
+        elif is_arxiv and entry_type != 'article':
             preprints.append((sort_year, item_str))
         elif entry_type == 'article':
             if is_arxiv and not fields.get('volume', ''):
                 preprints.append((sort_year, item_str))
             else:
                 journals.append((sort_year, item_str))
-        elif entry_type in ('inproceedings', 'conference', 'proceedings'):
-            conferences.append((sort_year, item_str))
         elif entry_type in ('phdthesis', 'mastersthesis'):
             theses.append((sort_year, item_str))
         else:
