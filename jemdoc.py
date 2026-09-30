@@ -718,12 +718,11 @@ def format_bib_categorized(filename, f_control):
         if year:
             item_str += '%s.' % year
 
-        # Prefer HAL over arXiv when both identifiers are available.
-        # DOI/NNT handling below remains independent.
+        # Display HAL and arXiv independently when both are available.
         if hal_link_id:
             item_str += ' [https://hal.science/%s ⟨%s⟩]' % (hal_link_id, hal_display_id)
-        elif arxiv_id:
-            item_str += ' [https://arxiv.org/abs/%s arXiv:%s]' % (arxiv_id, arxiv_id)
+        if arxiv_id:
+            item_str += ' arXiv: [https://arxiv.org/abs/%s %s]' % (arxiv_id, arxiv_id)
 
         # Theses are the exception: display the NNT instead of the DOI.
         # Accept an explicit NNT field when present, otherwise recover it from note.
