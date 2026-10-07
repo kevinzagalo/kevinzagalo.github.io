@@ -172,13 +172,11 @@ def standardconf():
          .bibtex-tooltip {
              display: none;
              position: absolute;
-             left: 0;
-             top: calc(100% + 0.45em);
+             right: 0;
+             top: 100%;
              z-index: 1000;
              width: max-content;
              max-width: min(46rem, 80vw);
-             max-height: 24rem;
-             overflow: auto;
              padding: 0.75em 0.9em;
              border: 1px solid #aaa;
              border-radius: 0.45em;
@@ -193,8 +191,55 @@ def standardconf():
              -moz-user-select: text;
              -webkit-user-select: text;
          }
+         .bibtex-actions {
+             position: absolute;
+             top: 0.5em;
+             right: 0.6em;
+             z-index: 1;
+             display: flex;
+             align-items: center;
+             justify-content: flex-end;
+             gap: 0.65em;
+         }
+         .bibtex-copy {
+             display: inline-flex;
+             align-items: center;
+             gap: 0.5em;
+             padding: 0.3em 0.6em;
+             border: 1px solid #aaa;
+             border-radius: 0.35em;
+             background: #f7f7f7;
+             color: #444;
+             font: inherit;
+             cursor: pointer;
+         }
+         .bibtex-copy:hover { background: #eee; }
+         .bibtex-copy:focus-visible { outline: 2px solid #527bbd; }
+         .bibtex-copy-icon {
+             position: relative;
+             width: 1em;
+             height: 1em;
+         }
+         .bibtex-copy-icon::before,
+         .bibtex-copy-icon::after {
+             content: "";
+             position: absolute;
+             width: 0.65em;
+             height: 0.65em;
+             border: 1px solid currentColor;
+             border-radius: 0.1em;
+             background: #f7f7f7;
+         }
+         .bibtex-copy-icon::before { top: 0; left: 0; }
+         .bibtex-copy-icon::after { bottom: 0; right: 0; }
+         .bibtex-copy-status {
+             font-size: 0.9em;
+             background: #fff;
+         }
          .bibtex-tooltip code {
              display: block;
+             max-height: 20rem;
+             overflow: auto;
              white-space: pre;
              font-family: monospace;
              user-select: text;
@@ -209,9 +254,53 @@ def standardconf():
       </style>
   <script type="text/javascript">
   document.addEventListener("DOMContentLoaded", function () {
+      function positionCitation(event) {
+          var popup = event.currentTarget.querySelector(".bibtex-tooltip");
+          popup.style.right = "0";
+          var left = popup.getBoundingClientRect().left;
+          if (left < 8) popup.style.right = (left - 8) + "px";
+      }
+      function fallbackCopy(text) {
+          var previousFocus = document.activeElement;
+          var textarea = document.createElement("textarea");
+          textarea.value = text;
+          textarea.setAttribute("readonly", "");
+          textarea.style.position = "fixed";
+          textarea.style.opacity = "0";
+          document.body.appendChild(textarea);
+          textarea.select();
+          try {
+              if (!document.execCommand("copy")) throw new Error("Copy failed");
+          } finally {
+              textarea.remove();
+              if (previousFocus) previousFocus.focus({preventScroll: true});
+          }
+      }
+      async function copyCitation(event) {
+          var button = event.currentTarget;
+          var popup = button.closest(".bibtex-tooltip");
+          var text = popup.querySelector("code").textContent;
+          var status = popup.querySelector(".bibtex-copy-status");
+          clearTimeout(button.copyStatusTimer);
+          try {
+              try {
+                  await navigator.clipboard.writeText(text);
+              } catch (err) {
+                  fallbackCopy(text);
+              }
+              status.textContent = "Copied!";
+          } catch (err) {
+              status.textContent = "Please select and copy the citation manually.";
+          }
+          button.copyStatusTimer = setTimeout(function () {
+              status.textContent = "";
+          }, 3000);
+      }
       var cites = document.querySelectorAll(".bibtex-cite[data-bibtex]");
       for (var i = 0; i < cites.length; i++) {
           var cite = cites[i];
+          cite.addEventListener("mouseenter", positionCitation);
+          cite.addEventListener("focusin", positionCitation);
           var code = cite.querySelector(".bibtex-tooltip code");
           if (!code) continue;
           try {
@@ -221,6 +310,7 @@ def standardconf():
                   bytes[j] = binary.charCodeAt(j);
               }
               code.textContent = new TextDecoder("utf-8").decode(bytes);
+              cite.querySelector(".bibtex-copy").addEventListener("click", copyCitation);
           } catch (err) {
               code.textContent = "Unable to decode BibTeX entry.";
           }
@@ -754,7 +844,12 @@ def format_bib_categorized(filename, f_control):
             encoded_bibtex = base64.b64encode(raw_bibtex.encode('utf-8')).decode('ascii')
             cite_html = (
                 '<span class="bibtex-cite" tabindex="0" data-bibtex="%s">cite'
-                '<span class="bibtex-tooltip" role="tooltip"><code></code></span>'
+                '<span class="bibtex-tooltip" role="group" aria-label="BibTeX citation">'
+                '<span class="bibtex-actions">'
+                '<span class="bibtex-copy-status" role="status" aria-live="polite"></span>'
+                '<button type="button" class="bibtex-copy" aria-label="Copy BibTeX citation">'
+                '<span class="bibtex-copy-icon" aria-hidden="true"></span>Copy</button>'
+                '</span><code></code></span>'
                 '</span>' % encoded_bibtex
             )
             item_str += ' {{%s}}' % cite_html
