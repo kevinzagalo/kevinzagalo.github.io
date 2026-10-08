@@ -860,7 +860,7 @@ def format_bib_categorized(filename, f_control):
         elif is_arxiv and entry_type != 'article':
             preprints.append((sort_year, item_str))
         elif entry_type == 'article':
-            if is_arxiv and not fields.get('volume', ''):
+            if is_arxiv:
                 preprints.append((sort_year, item_str))
             else:
                 journals.append((sort_year, item_str))
