@@ -859,11 +859,10 @@ def format_bib_categorized(filename, f_control):
             conferences.append((sort_year, item_str))
         elif is_arxiv and entry_type != 'article':
             preprints.append((sort_year, item_str))
+        elif entry_type == 'misc':
+            preprints.append((sort_year, item_str))
         elif entry_type == 'article':
-            if is_arxiv:
-                preprints.append((sort_year, item_str))
-            else:
-                journals.append((sort_year, item_str))
+            journals.append((sort_year, item_str))
         elif entry_type in ('phdthesis', 'mastersthesis'):
             theses.append((sort_year, item_str))
         else:
