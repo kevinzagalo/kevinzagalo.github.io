@@ -2102,9 +2102,7 @@ def render_publications(records, filename, content):
              '<a class="bibliography-download small-link" href="%s" download="%s">Download bibliography ↓</a>'
              % (download, esc(Path(filename).name, quote=True))]
     years = sorted({r['sort_year'] for r in records}, reverse=True)
-    for index, year in enumerate(years):
-        if index == 1:
-            parts.append('<details class="archive publications-archive"><summary>Earlier publications</summary><div class="details-body">')
+    for year in years:
         parts.append('<div class="publication-year"><h3 class="year">%s</h3><ul>' % (year or 'Undated'))
         group = sorted((r for r in records if r['sort_year'] == year), key=lambda r: r['category'])
         for r in group:
@@ -2123,8 +2121,6 @@ def render_publications(records, filename, content):
                              '<pre><code>%s</code></pre></div></details>' % esc(r['raw']))
             parts.append('</div></li>')
         parts.append('</ul></div>')
-    if len(years) > 1:
-        parts.append('</div></details>')
     parts.append('</div>')
     return '\n'.join(parts)
 
