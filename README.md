@@ -4,18 +4,11 @@ The current design is generated from `index.jemdoc`, `publications.bib`, `MENU`,
 and the images in `img/` with:
 
 ```sh
-python3 new_jemdoc.py -o new_index.html index.jemdoc
+python3 jemdoc.py -o index.html index.jemdoc
 ```
 
-Every push to `main` runs `new_jemdoc.py` in GitHub Actions and publishes the
+Every push to `main` runs `jemdoc.py` in GitHub Actions and publishes the
 result to GitHub Pages. Generated HTML is not tracked in the repository.
-
-The original `jemdoc.py` and `jemdoc.css` are kept unchanged. To preview the
-previous renderer, run:
-
-```sh
-python3 jemdoc.py -o legacy_index.html index.jemdoc
-```
 
 ## Original jemdoc project
 
