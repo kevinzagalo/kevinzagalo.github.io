@@ -24,7 +24,7 @@ jobs:
       - name: Build and Assemble
         run: |
           mkdir public
-          python3 jemdoc.py -o public/ *.jemdoc
+          python3 new_jemdoc.py -o public/ *.jemdoc
           cp jemdoc.css public/
           cp -r img public/
 
