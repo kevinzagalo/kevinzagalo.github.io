@@ -1905,7 +1905,7 @@ def _procfile_jemdoc(f):
 SIMPLE_CSS = r"""
 :root { color-scheme: light; --ink:#252b33; --muted:#606975; --blue:#314f78; --line:#e3e6ea; }
 * { box-sizing:border-box; }
-html { scroll-padding-top:28px; }
+html { scroll-padding-top:calc(var(--header-height, 108px) + 20px); }
 body { margin:0; background:#fff; color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased; }
 a { color:var(--blue); text-decoration:none; text-underline-offset:4px; }
 a:hover { text-decoration:underline; }
@@ -1913,7 +1913,7 @@ a:hover { text-decoration:underline; }
 a:focus-visible,summary:focus-visible,button:focus-visible { outline:2px solid var(--blue); outline-offset:5px; border-radius:2px; }
 p { margin:0 0 14px; }
 .page { max-width:880px; margin:auto; padding:0 38px; }
-.site-header { padding:35px 0 24px; display:flex; align-items:baseline; justify-content:space-between; gap:20px; border-bottom:1px solid var(--line); }
+.site-header { position:sticky; top:0; z-index:5; background:#fff; padding:35px 0 24px; display:flex; align-items:baseline; justify-content:space-between; gap:20px; border-bottom:1px solid var(--line); }
 .site-name { color:var(--ink); font-family:Georgia,"Times New Roman",serif; font-size:29px; font-weight:400; letter-spacing:-.8px; white-space:nowrap; }
 .site-name a { color:inherit; }
 nav { display:flex; gap:23px; font-size:14px; }
@@ -1983,6 +1983,7 @@ footer { border-top:1px solid var(--line); display:flex; justify-content:space-b
 .skip-link { position:absolute; left:16px; top:-80px; background:white; padding:8px 12px; border:1px solid var(--blue); z-index:10; }
 .skip-link:focus { top:10px; }
 @media (max-width:660px) {
+ html { scroll-padding-top:calc(var(--header-height, 140px) + 16px); }
  .page { padding:0 23px; }
  .site-header { flex-direction:column; gap:11px; padding:24px 0 20px; }
  .site-name { font-size:28px; }
@@ -2005,6 +2006,7 @@ footer { border-top:1px solid var(--line); display:flex; justify-content:space-b
 }
 @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
 @media print {
+ .site-header { position:static; }
  .page { max-width:none; padding:0; }
  body { font-size:10pt; }
  nav,.skip-link,footer,.copy-citation { display:none!important; }
@@ -2035,6 +2037,16 @@ main h3 { scroll-margin-top:28px; }
 """
 
 SIMPLE_JS = r"""
+const siteHeader = document.querySelector('.site-header');
+if (siteHeader) {
+  const updateHeaderHeight = () => {
+    document.documentElement.style.setProperty('--header-height', `${siteHeader.getBoundingClientRect().height}px`);
+  };
+  updateHeaderHeight();
+  if (window.ResizeObserver) new ResizeObserver(updateHeaderHeight).observe(siteHeader);
+  else window.addEventListener('resize', updateHeaderHeight);
+}
+
 document.querySelectorAll('.copy-citation').forEach((button) => {
   if (!navigator.clipboard?.writeText) return;
   button.hidden = false;
@@ -2090,7 +2102,9 @@ def render_publications(records, filename, content):
              '<a class="bibliography-download small-link" href="%s" download="%s">Download bibliography ↓</a>'
              % (download, esc(Path(filename).name, quote=True))]
     years = sorted({r['sort_year'] for r in records}, reverse=True)
-    for year in years:
+    for index, year in enumerate(years):
+        if index == 1:
+            parts.append('<details class="archive publications-archive"><summary>Earlier publications</summary><div class="details-body">')
         parts.append('<div class="publication-year"><h3 class="year">%s</h3><ul>' % (year or 'Undated'))
         group = sorted((r for r in records if r['sort_year'] == year), key=lambda r: r['category'])
         for r in group:
@@ -2109,6 +2123,8 @@ def render_publications(records, filename, content):
                              '<pre><code>%s</code></pre></div></details>' % esc(r['raw']))
             parts.append('</div></li>')
         parts.append('</ul></div>')
+    if len(years) > 1:
+        parts.append('</div></details>')
     parts.append('</div>')
     return '\n'.join(parts)
 
@@ -2397,15 +2413,15 @@ def render_simplified_page(document, f):
             for subheading, subcontent in split_headings(content, 2):
                 if subheading and subheading.attrs.get('id') == 'contact':
                     contact = (subheading, subcontent)
+                    sections.append(contact)
                 else:
                     if subheading: intro.append(subheading)
                     intro.extend(subcontent)
         elif heading.attrs.get('id') == 'contact':
             contact = (heading, content)
+            sections.append(contact)
         else:
             sections.append((heading, content))
-    if contact:
-        sections.append(contact)
     section_ids = {h.attrs.get('id') for h, _ in sections}
     menu = tree.find(id='layout-menu')
     links = []
@@ -2423,7 +2439,6 @@ def render_simplified_page(document, f):
                 node.children = target.children[:]
             node.attrs.pop('class', None)
             links.append((node.render(), href.lstrip('#')))
-        links.sort(key=lambda x: x[1] == 'contact')
     if not links:
         links = [('<a href="#%s">%s</a>' % (html_escape(h.attrs.get('id', ''), quote=True), h.inner()), '') for h, _ in sections]
     source_link = ''
